@@ -1,0 +1,125 @@
+Introduction
+============
+
+This document describes the file formats of the surviving binary data files
+that encode measurement data from the Viking GCMS (gas chromatograph mass
+spectrometer) instrument.
+
+Both Viking spacecraft carried such an instrument, and several sample runs
+were performed by both spacecraft. The data is available in three versions:
+
+ * binary data files with raw measurement data
+ * binary data files with processed, reduced data
+ * scanned bar graphs of the processed data (originally on microfilm)
+
+There is one data file of each kind for each sample run. It turns out that
+the format of the raw data files are completely different for the Viking-1
+and Viking-2 sample runs - apparently, the Viking-2 data has undergone some
+processing after all, while the Viking-1 data is closer to what was actually
+received from the spacecraft. However, the format of the reduced dataset is
+the same for both spacecraft.
+
+Format of the reduced dataset
+=============================
+
+Overview
+--------
+
+It seems that these files encode the transformed, calibrated results of
+the mass spectrometry measurements, that is, they store current
+(or equivalent) versus m/z, plus all the necessary auxiliary engineering
+data. It is reasonable to assume that the bar charts on the microfilms
+were generated from these files, and indeed it is possible to create
+almost identical plots from them.
+
+The format of these files seem to be the same for both instruments.
+They consist of fixed size 1282 byte records. The first record serves as
+a global header for storing constants and other metadata relevant to the
+entire sample run. Each subsequent record contains the reduced mass
+spectrum from one scan. Therefore a data file with `n` scans has a file
+size of `(n+1)*1282`; this is true for all 6 Viking-1 and 10 Viking-2
+files.
+
+All actual measurement data and some of the constants in the header are
+floating point numbers, however, they use an obscure and obsolete
+floating point number format (after all, the now ubiquitous IEEE-754 was
+not invented yet in 1977). As this format doesn't seem to be documented
+anywhere, a detailed description is warranted here.
+
+Floating point format
+---------------------
+
+This format uses 32 bits (or 4 bytes, stored on disk as big endian) to
+represent a floating point number. The first 24 bits represent the
+mantissa _in two's complement_ notation. The remaining 8 bits store the
+exponent (but see below).
+
+The following figure illustrates the format:
+
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-------------------------------------------+---------------+
+     |s:f:      Mantissa (two's complement)          | Exponent - 129|
+     +-+-+-------------------------------------------+---------------+
+
+A few things are worth noting here.
+
+ * The mantissa is in a two's complement form; this means that while the
+   most significant bit (the `s` bit in the figure) can still be thought
+   of as the sign bit (it's 0 if the number is positive and 1 if it is
+   negative), it is really a part of the representation.
+
+ * As opposed to IEEE-754 where the first bit of the mantissa is omitted
+   (because it is almost always 1), here the entire mantissa is always
+   encoded. The second most significant bit (the `f` bit in the figure)
+   is always 1 for positive numbers.
+
+ * Because the presence of the first bit, the actual usable precision of
+   this format is one bit less than that of IEEE-754. 
+
+ * While it is certain that the exponent is biased, it may be debatable
+   whether the bias is 128 or 129. FIXME explain
+
+ * The number 0 is encoded as 0x00000000.
+
+ * The encoded representations are not necessarily aligned to offsets
+   divisible by 4.
+
+Examples (taken from DR005631_F00002.PHYS):
+
+Hex      | Binary                            | Decoded value
+-------- | --------------------------------- | ----------------------
+448bfc81 | 010001001000101111111100 10000001 |   1.07104396820068
+84828584 | 100001001000001010000101 10000100 | -15.4362697601318
+7697547c | 011101101001011101010100 01111100 |   0.0579058229923248
+94249274 | 100101000010010010010010 01110100 | - 0.000205721182283014
+97ada784 | 100101111010110110100111 10000100 | -13.0402088165283
+70ec717a | 011100001110110001110001 01111010 |   0.0137846190482378
+c0000081 | 110000000000000000000000 10000001 | - 1.0
+
+Header
+------
+
+TODO list of known fields
+
+Scan records
+------------
+
+The first 400 or so bytes
+is a header (mostly blank, with some 16 bit counters and other
+engineering data). The remainder of each row is filled with 200+ 4 byte
+values.
+
+Row header
+----------
+
+
+Format of the Viking-1 raw dataset
+==================================
+
+TODO
+
+Format of the Viking-2 raw dataset
+==================================
+
+TODO
