@@ -43,8 +43,9 @@ files.
 All actual measurement data and some of the constants in the header are
 floating point numbers, however, they use an obscure and obsolete
 floating point number format (after all, the now ubiquitous IEEE-754 was
-not invented yet in 1977). As this format doesn't seem to be documented
-anywhere, a detailed description is warranted here.
+not invented yet in 1977). This format appears to be that of the
+IBM 1130/1800, but since available documentation is sparse, a detailed
+description is warranted here.
 
 Floating point format
 ---------------------
@@ -59,7 +60,7 @@ The following figure illustrates the format:
       0                   1                   2                   3
       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      +-+-+-------------------------------------------+---------------+
-     |s:f:      Mantissa (two's complement)          | Exponent - 129|
+     |s:f:      Mantissa (two's complement)          |Exponent - Bias|
      +-+-+-------------------------------------------+---------------+
 
 A few things are worth noting here.
@@ -72,18 +73,37 @@ A few things are worth noting here.
  * As opposed to IEEE-754 where the first bit of the mantissa is omitted
    (because it is almost always 1), here the entire mantissa is always
    encoded. The second most significant bit (the `f` bit in the figure)
-   is always 1 for positive numbers.
+   is always 1 for positive numbers. In other words, this format does
+   not use hidden bit normalization.
 
  * Because the presence of the first bit, the actual usable precision of
    this format is one bit less than that of IEEE-754. 
 
- * While it is certain that the exponent is biased, it may be debatable
-   whether the bias is 128 or 129. FIXME explain
+ * The exponent is biased. Whether the bias is 128 or 129 depends on the
+   point of view. From the examples in the table below it can be seen
+   that values close to unity are encoded with an exponent of 0x81, or
+   129. Given that the real value of a floating point number can be
+   expressed as `v = m * 2 ** (e - bias)`, it makes more sense to say
+   that the bias is 129 in this case.
+
+ * The presence of the first bit (which conceptionally stands before the
+   implied "decimal" point) has to be taken into account when writing
+   conversion functions to/from this format. The point has to be shifted
+   right by 22 bit positions, so the actual conversion formula to use is
+   `v = m * 2 ** (e - 129 - 22)`.
 
  * The number 0 is encoded as 0x00000000.
 
+ * The Rushneck et al. (1978) article about the GSMC instrument mentions
+   the IBM 1800 in one of the figures, so it makes sense that the data
+   files use the storage format of that computer. However, available
+   descriptions (e.g. [http://www.quadibloc.com/comp/cp0201.htm] and
+   [https://nssdc.gsfc.nasa.gov/nssdc/formats/IBM1130.htm]) do not
+   mention that the mantissa is in two's complement form.
+
  * The encoded representations are not necessarily aligned to offsets
-   divisible by 4.
+   divisible by 4. Apparently the IBM 1800 (a 16-bit machine) did not
+   have the alignment requirements that modern architectures have.
 
 Examples (taken from DR005631_F00002.PHYS):
 
