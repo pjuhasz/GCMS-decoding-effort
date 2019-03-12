@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use feature qw/say/;
 
+# TODO document, make aware of missing scans, add options to dump headers
+
 my $debug = 0;
 
 sub unpack_viking_float {
@@ -19,7 +21,7 @@ sub unpack_viking_float {
 	}
 }
 
-open my $F, '<', $ARGV[0] or die;
+open my $F, '<', $ARGV[0] or die "Can't open $ARGV[0]";
 local $/ = \1282;
 
 my $header = <$F>;
@@ -61,7 +63,6 @@ while (my $record = <$F>) {
 	for (
 		['MIT scan number', 0x2],
 		['Run number',      0x4],
-		#['?',               0x6], # always 1?
 		['Scan Number',     0x8],
 	) {
 		my $v = substr $record, $_->[1], 2;

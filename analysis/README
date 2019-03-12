@@ -1,0 +1,11 @@
+To view mass spectrograms interactively, run the following commands:
+
+make
+gnuplot
+
+then on the gnuplot> prompt, type load 'interactive.plt'.
+
+In the plot window press `h` or `l` to switch to the previous or next file,
+or press `j` or `k` to view the previous or next scan in the current file.
+
+Prerequisites: perl, gnuplot
