@@ -123,7 +123,7 @@ Integer format
 Most, if not all, numbers in the reduced data files that are not
 floating point are 16 bit (unsigned?) integers in big endian format. In
 many cases (raw measurement data or engineering parameters from the
-instrument) the actual value use only 9 bits.
+instrument) the actual values use only 9 bits.
 
 Header
 ------
@@ -187,8 +187,8 @@ are replicated in each scan row's header (see below).
 
 However, the representation of this value is not uniform across all data
 files. In Viking-2 files 1-3, 8 they are in the range 1..5 and plotting
-the table reproduces the corresponding plot in Fig. 7 of Rushneck et al.
-(1978) exactly. However, in the rest of the files use a different
+the table reproduces the corresponding plot in Fig. 7 of Biemann et al.
+(1977) exactly. However, in the rest of the files use a different
 representation (values between 0-0x26) and the plots resemble but do not
 match their counterparts in the article. All Viking-1 files use this
 second format. It is possible that this second format encodes the ion
@@ -212,8 +212,13 @@ at the beginning and end of the data section of the record are filled
 with zeroes, because the instrument measured between m/z of approx.
 12 and 219, but the end of the record actually correspond to m/z 1.
 
-In some cases (DR005631_F00001.PHYS) the first scan is missing, so the
-above formula has to be adjusted accordingly.
+Cases where one scan is missing, so the above formula has to be adjusted
+accordingly:
+
+File                  | Missing no.
+--------------------- | -----------
+DR005631_F00001.PHYS  | 1
+DR005631_F00001.PHYS  | 135
 
 Row header
 ----------
@@ -225,48 +230,85 @@ Offset    | Type | Meaning, notes
 0000      | i16  | ?       - always 0x0005 - row start magic number?
 0002      | i16  | MIT Scan number
 0004      | i16  | GCMS Run ID number
-0006      | i16  | ?       - always 0x0001?
+0006      | i16  | Binary flag, 1 if data present, 0 if all zeroes
 0008      | i16  | Mission scan number
-000a      | i16  | effluent divider status? (same as in the header table)
+000a      | i16  | effluent divider status? (same as in the header table and 0x0108)
 000c      | i16  | blank
 000e      | i16  | blank
-0010      | i16  | ?       - some large number e.g. 0x7fff
+0010      | i16  | ?       - some large number e.g. 0x7fff, perhaps a bitfield?
 0012      | i16  | initial mission scan number, constant (often 0x11b)
-0014      | i16  | ?       - always 0x0001?
+0014      | i16  | ?       - some small number (1,2,3,12)
 0016-00d6 | i16  | blank
 00d8      | i16  | ?       - always 0x0004
 00da-00e6 | i16  | blank
-00e8      | i16  | ?
+00e8      | i16  | ?       - see below
 00ea      | i16  | ?
+00ec      | i16  | ?
 00ee      | i16  | ?
 00f0      | i16  | ?
 00f2      | i16  | ?
 00f4      | i16  | ?
 00f6      | i16  | ?
-00f8      | i16  | ?
-00fa      | i16  | ?
-00fe      | i16  | ?
-0100      | i16  | ?
-0102      | i16  | ?
-0104      | i16  | ?
-0104      | i16  | ?
-0106      | i16  | ?
-0106      | i16  | ?
-0108      | i16  | ?
-010a      | i16  | ?
-010e      | i16  | ?
-0110      | i16  | ?
-0112      | i16  | ?
+00f8      | i16  | ?       - some value around either 216 or 432, with spikes and jitter
+00fa      | i16  | ?       - some value around either 64 or 128, with spikes and jitter
+00fc      | i16  | ?       - some value around either 115 or 315, with spikes and jitter
+00fe      | i16  | ?       - some value around either 40 or 80, with spikes and jitter
+0100      | i16  | ?       - some value around either 160 or 325, with spikes and jitter
+0102      | i16  | ?       - some value around either 180 or 350, with spikes and jitter
+0104      | i16  | ?       - some value around either 60 or 120, with spikes and jitter
+0106      | i16  | ?       - some value around either 50 or 290, with spikes and jitter
+0108      | i16  | effluent divider status? (same as in the header table and at 0x000a)
+010a      | i16  | ?       - repeating pattern with period 16, value range 0-511
+010c      | i16  | ?       - a smooth curve, somewhat resembling the ones at 0x00e8
+010e      | i16  | ?       - repeating pattern with period 16, value range 0-15
+0110      | i16  | ?       - something resembling the effluent divider status, but with a range of 0-15
+0112      | i16  | modulo 16 counter (range 1-16)
 0114      | i16  | MIT Scan number
 0116      | i16  | Mission scan number
-0118      | i16  | Counter?
+0118      | i16  | Counter? (increases with 16/scan, but sometimes skips or resets)
 
-TODO info about the rest
+The plots of the eight values at offsets 0xe8-0xf6 are very similar to
+each other within the same data file, looking almost like shifted copies
+of each other. They are very different between files, though. Perhaps
+related to the total ion current, which was measured 8 times during each
+sample run?
+
+The note "some value around either x or y, with spikes and jitter" means
+that the value is almost constant within a file, but there small
+variations of 1-2 units are common and occasionally the value drops to
+zero or some other value for a few scans. The location of spikes seems
+to be consistent, i.e. they are at the same scans for most (all?) of
+these values.
+
 
 Reproducing the mass spectrograms from the microfilms
 -----------------------------------------------------
 
-TODO
+With the information above it is possible to reproduce almost every
+aspect of the bar charts from the microfilms. The constants listed at
+the start of each scanned document can be retrieved from the file
+header. The only information missing is the oven temperature, the
+hydrous/anhydrous status and the flag for the "no mass compensation"
+notice. Perhaps these qualifiers were not stored in the data files at
+all.
+
+For the charts themselves it is enough to plot the decoded intensities
+as a function of mass number, using the formula indicated above, with
+any program that can produce autoscaled plots. The intensity of the
+largest peak displayed above the charts is simply the value of the
+largest peak from the sample run (or from the sample run, with m/z < 47
+peaks suppressed), multiplied with 1e13. (The actual displayed values
+seem to match exactly, confirming that the interpretation of the file
+outlined in this document is correct.)
+
+The most important thing missing is the effluent divider number, which
+could not be reliably determined from the data.
+
+Additionally, one can reproduce the gas chromatograms (time evolution
+charts) from the Biemann et al. (1977), either for any selected m/z or
+the sum of all ions. Again, the effluent divider number is sorely
+missing here.
+
 
 Format of the Viking-1 raw dataset
 ==================================
