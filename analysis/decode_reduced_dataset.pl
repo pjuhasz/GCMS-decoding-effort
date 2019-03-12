@@ -24,6 +24,7 @@ local $/ = \1282;
 
 my $header = <$F>;
 for (
+	['Number of scans',                        0x470],
 	['Run number',                             0x4b0],
 	['Processed on year',                      0x4ae],
 	['Processed on month',                     0x4ac],
