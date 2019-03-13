@@ -212,13 +212,18 @@ at the beginning and end of the data section of the record are filled
 with zeroes, because the instrument measured between m/z of approx.
 12 and 219, but the end of the record actually correspond to m/z 1.
 
-Cases where one scan is missing, so the above formula has to be adjusted
-accordingly:
+Cases where one scan is missing in its entirety (the scan counter just
+skips one), so the above formula has to be adjusted accordingly:
 
 File                  | Missing no.
 --------------------- | -----------
 DR005631_F00001.PHYS  | 1
-DR005631_F00001.PHYS  | 135
+DR005631_F00006.PHYS  | 135
+
+Additionally, there are several scans with no data (all zeroes).
+And even in the rest of the scans with valid data there are occasionally
+bad/missing points (especially near first/last scans), these are denoted
+with the special value -1 (otherwise, all valid values are positive).
 
 Row header
 ----------
@@ -237,7 +242,7 @@ Offset    | Type | Meaning, notes
 000e      | i16  | blank
 0010      | i16  | ?       - some large number e.g. 0x7fff, perhaps a bitfield?
 0012      | i16  | initial mission scan number, constant (often 0x11b)
-0014      | i16  | ?       - some small number (1,2,3,12)
+0014      | i16  | ?       - some small number (1,2,3,12) - oven number?
 0016-00d6 | i16  | blank
 00d8      | i16  | ?       - always 0x0004
 00da-00e6 | i16  | blank
