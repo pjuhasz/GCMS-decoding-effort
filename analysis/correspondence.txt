@@ -42,6 +42,6 @@ Run ID | Sample        | Oven temp. | # scans, reduced | reduced file         | 
 10039  | VL-2 Sample 2 | 500        | 420              | DR005388_F00009.PHYS | 420          | DR005967_F00004.PHYS
 10041  | VL-2 Sample 2 | 500        | 352              | DR005388_F00010.PHYS | 352          | DR005967_F00005.PHYS
 
-Again, these assignments are tentative but at least the raw files have
-a predictable, simple structure, and at least each record within a file
-is identifiable.
+These matches were confirmed by comparing the corresponding values in
+the row headers. The discrepancies in scan count result from missing
+scans in the raw files.

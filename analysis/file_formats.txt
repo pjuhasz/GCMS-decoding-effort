@@ -241,7 +241,7 @@ Offset    | Type | Meaning, notes
 000c      | i16  | blank
 000e      | i16  | blank
 0010      | i16  | ?       - some large number e.g. 0x7fff, perhaps a bitfield?
-0012      | i16  | initial mission scan number, constant (often 0x11b)
+0012      | i16  | initial mission scan number, constant (282 or 283)
 0014      | i16  | ?       - some small number (1,2,3,12) - oven number?
 0016-00d6 | i16  | blank
 00d8      | i16  | ?       - always 0x0004
@@ -323,4 +323,88 @@ TODO
 Format of the Viking-2 raw dataset
 ==================================
 
-TODO
+Even though we call these files the "raw" dataset, they seem to have
+undergone some kind of processing on the ground before archival.
+
+Every file consists of fixed size 7802 byte records.
+There is no global file header or footer, and the sample run id is not
+to be found anywere in the file, which is a pity. This means that a raw
+data file with `n` scans has a file size of `n*7802`; this is true for
+all 10 Viking-2 files, but some of them have missing scans in the middle
+of the file (fortunately the scan counters in the headers make it
+possible to identify these cases).
+
+Each record is made up of a 122 byte header and 7680 bytes of data.
+All values are encoded as big endian unsigned 16 bit integers, so there
+are 61 values in the header and 3840 values for the measurement channels
+for one scan. Many values in the header and all in the data section use
+9 bits only (range 0-511). This is in accordance with the available
+literature (which states that most quantities were sampled at 9 bit
+resolution). 
+
+The measurement data encodes the logarithm of the resolved ion current
+(or rather, a voltage between 0-5 V that is related to that quantity
+through a calibration curve that is not yet known), encoded as a 9 bit
+integer. Here higher values correspond to higher current (unlike in the
+Viking-1 raw files).
+
+The instrument worked by sweeping the voltage exponentially from 2350 V
+down to 125 V (corresponding to a m/z range of approx. 11.5-215), taking
+3840 samples with a fixed cadence - which means that an exponential-like
+transformation needs to be applied to the sample number to get to m/z
+units. It is important to note that in the Viking-2 raw files the
+samples are stored in _reverse order_, meaning that samples
+corresponding to high m/z are stored first in the record. The exact
+parameters of the transformation function are not known yet.
+
+In any case, to get the sample `i` from sample `n`, read 2 bytes from
+offset `7802*n + 122 + 2*i`.
+
+
+Row header
+----------
+
+Offsets here are counted from _beginning of the record_.
+
+Offset    | Type | Meaning, notes
+--------- | ---- | --------------
+00        | i16  | ?       - always 0x781e - row start magic number?
+02-2c     | i16  | blank
+2e        | i16  | ?       - some small number (1,2,3,12) - oven number? (same as RRH 0x14)
+30        | i16  | initial mission scan number, constant (282 or 283) (same as RRH 0x12)
+32-3a     | i16  | blank
+3c        | i16  | ?       - 0, except for DR005967_F00007 where it changes to 1 mid-file
+3e        | i16  | ?       - 0, except for DR005967_F00007 where it changes to 4474 mid-file
+40-4e     | i16  | ?       - 8 similar, shifted curves, similar to RRH 0xe8-0xf6
+50        | i16  | ?       - some value around either 216 or 432, with spikes and jitter
+52        | i16  | ?       - some value around either 64 or 128, with spikes and jitter
+54        | i16  | ?       - some value around either 115 or 315, with spikes and jitter
+56        | i16  | ?       - some value around either 40 or 80, with spikes and jitter
+58        | i16  | ?       - some value around either 160 or 325, with spikes and jitter
+5a        | i16  | ?       - some value around either 185 or 350, with spikes and jitter
+5c        | i16  | ?       - some value around either 62 or 126, with spikes and jitter
+5e        | i16  | ?       - some value around either 77 or 294, with spikes and jitter
+60        | i16  | effluent divider status?
+62        | i16  | ?       - repeating pattern with period 16, value range 0-511
+64        | i16  | ?       - a smooth curve, somewhat resembling the ones at 0x40
+66        | i16  | ?       - repeating pattern with period 16, value range 0-15
+68        | i16  | ?       - something resembling the effluent divider status, but with a range of 0-15
+6a        | i16  | modulo 16 counter (range 1-16)
+6c        | i16  | MIT Scan number
+6e        | i16  | Mission scan number
+70        | i16  | Counter? (increases with 16/scan, but sometimes skips or resets)
+72        | i16  | ?       - mostly 0, but with spikes to 1 and in some files it switches to 1 mid-file
+74        | i16  | ?       - mostly 1, but in some files it switches to 0 near end of file
+76        | i16  | ?       - some large number e.g. 0x7fff, perhaps a bitfield?
+78        | i16  | Mission scan number
+
+The note "some value around either x or y, with spikes and jitter" means
+that the value is almost constant within a file, but there small
+variations of 1-2 units are common and occasionally the value drops to
+zero or some other value for a few scans. The location of spikes seems
+to be consistent, i.e. they are at the same scans for most (all?) of
+these values.
+
+The values between offsets 0x40-0x70 seem to be the same as the values
+in the reduced row headers offsets 0xe8-0x118 (apart from missing scans
+in the raw files).
