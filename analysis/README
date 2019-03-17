@@ -1,11 +1,47 @@
+This directory contains documentation about the structure and contents
+of the Viking GCMS raw and reduced binary data files, and a set of
+analysis script to decode and view their contents.
+
+Files:
+
+ * file_formats.txt
+   Human-readable text with reverse engineered information about file
+   structure
+
+ * correspondence.txt
+   Tables that link sample run ids and file names
+
+ * decode_reduced_dataset.pl
+   Script to decode one file from the reduced dataset, prints result as
+   a tab separated file (with some header information prefixed with
+   '#' characters) on standard output.
+   Use the --help option for more information.
+
+ * interactive.plt
+   gnuplot script for viewing spectrograms interactively. See below.
+
+ * plot_all_files.sh
+   Shell script to create an SVG plot from all files, all mass numbers
+   and all scans.
+
+
+To just decode all the files (currently only from the reduced dataset),
+just run `make`.
+
+To create plots in batch mode, run `make spectrograms`.
+Warning: this takes several minutes and creates several thousand files.
+
 To view mass spectrograms interactively, run the following commands:
 
-make
-gnuplot
+	make
+	gnuplot
 
-then on the gnuplot> prompt, type load 'interactive.plt'.
+then on the `gnuplot>` prompt, type `load 'interactive.plt'`.
 
-In the plot window press `h` or `l` to switch to the previous or next file,
-or press `j` or `k` to view the previous or next scan in the current file.
+In the plot window press the down and up arrow keys to switch to the
+previous or next file, or press the left and right arrow keys to view
+the previous or next scan in the current file.
+Press the 'm' key to switch between mass spectrogram and time evolution
+mode.
 
-Prerequisites: perl, gnuplot
+Prerequisites: perl, gnuplot (at least version 5.0), make, bash, awk

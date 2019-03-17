@@ -12,4 +12,4 @@ clean:
 	rm -rf *.header
 	rm -rf spectrograms
 
-PHONY: decode clean
+PHONY: decode clean spectrograms
