@@ -320,19 +320,46 @@ Format of the Viking-1 raw dataset
 
 TODO
 
+Integer packing
+---------------
+
+The following figure illustrates the format:
+
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-----------------+-----------------+-----------------+---------+
+     |   First value   |  Second value   |   Third value   |0 0 0 0 0|
+     +-----------------+-----------------+-----------------+---------+
+
+Frame header
+------------
+
+Offsets here are counted from _beginning of the frame_.
+
+Offset    | Type | Meaning, notes
+--------- | ---- | --------------
+00        | i16  | ?       - either 0x6400 (short frames) or 0xa001 (long frames)
+02        | i8   | ?       - modulo 18 counter (avg period ~18.3)
+03        | i8   | blank
+04        | i16  | ?       - something related to packet size, type, contents, or modulo 16 counter?
+06        | i32  | millisecond-of-day counter, resets at 86400000
+0a        | i16  | ?       - always 0x1b00
+0e        | i16  | day counter?
+TODO
+
 Format of the Viking-2 raw dataset
 ==================================
 
 Even though we call these files the "raw" dataset, they seem to have
 undergone some kind of processing on the ground before archival.
 
-Every file consists of fixed size 7802 byte records.
-There is no global file header or footer, and the sample run id is not
-to be found anywere in the file, which is a pity. This means that a raw
-data file with `n` scans has a file size of `n*7802`; this is true for
-all 10 Viking-2 files, but some of them have missing scans in the middle
-of the file (fortunately the scan counters in the headers make it
-possible to identify these cases).
+Every file consists of fixed size 7802 byte records. Each record
+corresponds to one scan. There is no global file header or footer, and
+the sample run id is not to be found anywere in the file, which is a
+pity. This means that a raw data file with `n` scans has a file size of
+`n*7802`; this is true for all 10 Viking-2 files, but some of them have
+missing scans in the middle of the file (fortunately the scan counters
+in the headers make it possible to identify these cases).
 
 Each record is made up of a 122 byte header and 7680 bytes of data.
 All values are encoded as big endian unsigned 16 bit integers, so there
