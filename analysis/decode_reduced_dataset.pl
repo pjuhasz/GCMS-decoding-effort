@@ -116,7 +116,7 @@ GetOptions(
 	'sep|s=s'       => \$sep,
 	'rowheaders|r!' => \$print_rowheaders,
 	'effluent|e!'   => \$print_effluent_table,
-	'help|p!'       => \$help,
+	'help|h!'       => \$help,
 ) or die pod2usage(-exitval => 1, -verbose => 1);
 die pod2usage(-exitval => 1, -verbose => 2) if $help;
 die pod2usage(-exitval => 1, -verbose => 0) unless $ARGV[0];
