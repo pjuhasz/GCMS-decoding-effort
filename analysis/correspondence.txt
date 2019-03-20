@@ -4,7 +4,7 @@ Correspondences between file names and sample runs
 The following tables attempt to link the sample run ids (which are used 
 to identify the runs in the literature) to the file names in both the
 raw and reduced datasets. The bottom line is that the similarly numbered
-files from the two datasets likely don't match.
+files from the two datasets don't match.
 
 The processed files have the run id in their headers and in each record,
 so unambiguous identification is possible.
@@ -12,20 +12,23 @@ so unambiguous identification is possible.
 Unfortunately however, the raw files don't seem to contain the run id
 anywhere.
 
+Identification is possible comparing the auxiliary data stored in the
+record headers (or in case of Viking 1 raw files, every 16th data frame).
+
 Viking-1
 --------
 
 Run ID | Sample        | Oven temp. | # scans, reduced | reduced file         | # scans, raw | raw file
 ------ | ------------- | ---------- | ---------------- | -------------------- | ------------ | --------------------
-10008  | Course blank  | -          | 411              | DR005631_F00001.PHYS | ?            | DR005289_F00004.PHYS
-10015  | VL-1 Sample 1 | 200        | 305              | DR005631_F00002.PHYS | ?            | DR005289_F00005.PHYS
-10018  | VL-1 Sample 1 | 500        | 411              | DR005631_F00003.PHYS | ?            | DR005289_F00006.PHYS
-10023  | VL-1 Sample 2 | 350        | 500              | DR005631_F00004.PHYS | ?            | DR005289_F00001.PHYS
-10024  | VL-1 Sample 2 | 500        | 500              | DR005631_F00005.PHYS | ?            | DR005289_F00002.PHYS
-10025  | VL-1 Sample 2 | 500        | 411              | DR005631_F00006.PHYS | ?            | DR005289_F00003.PHYS
+10008  | Course blank  | -          | 411              | DR005631_F00001.PHYS | 409          | DR005289_F00004.PHYS
+10015  | VL-1 Sample 1 | 200        | 305              | DR005631_F00002.PHYS | 305          | DR005289_F00005.PHYS
+10018  | VL-1 Sample 1 | 500        | 411              | DR005631_F00003.PHYS | 411          | DR005289_F00006.PHYS
+10023  | VL-1 Sample 2 | 350        | 500              | DR005631_F00004.PHYS | 516          | DR005289_F00001.PHYS
+10024  | VL-1 Sample 2 | 500        | 500              | DR005631_F00005.PHYS | 516          | DR005289_F00002.PHYS
+10025  | VL-1 Sample 2 | 500        | 411              | DR005631_F00006.PHYS | 411          | DR005289_F00003.PHYS
 
-These assignments are tentative and based on file sizes only, as the raw
-files are very irregular and contain incomplete scans.
+These matches were confirmed by comparing the corresponding values in
+the row headers.
 
 Viking-2
 --------
