@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 
+# TODO document options
 
 use strict;
 use warnings;
@@ -9,19 +10,20 @@ use Pod::Usage;
 
 # table with offsets of known fields
 my @frameheader = (
-
+# TODO
 );
 
 # parse command line options
 my $sep = "\t";
-my ($print_frames, $print_rowheaders, $print_tabular, $print_hex, $help);
+my ($print_frames, $print_rowheaders, $print_tabular, $keep_partial, $print_hex, $help);
 GetOptions(
-	'hex|H!'        => \$print_hex,
-	'sep|s=s'       => \$sep,
-	'frames|f!'     => \$print_frames,
-	'rowheaders|r!' => \$print_rowheaders,
-	'tabular|t!'    => \$print_tabular,
-	'help|h!'       => \$help,
+	'hex|H!'          => \$print_hex,
+	'sep|s=s'         => \$sep,
+	'frames|f!'       => \$print_frames,
+	'rowheaders|r!'   => \$print_rowheaders,
+	'tabular|t!'      => \$print_tabular,
+	'keep-partial|k!' => \$keep_partial,
+	'help|h!'         => \$help,
 ) or die pod2usage(-exitval => 1, -verbose => 1);
 die pod2usage(-exitval => 1, -verbose => 2) if $help;
 die pod2usage(-exitval => 1, -verbose => 0) unless $ARGV[0];
@@ -91,21 +93,25 @@ while ($read = sysread $F, $s, 2) {
 
 	# if it is a data frame, accumulate its contents
 	# if it is an auxiliary frame, either print the data from that, or print the entire accumulated scan
-	# TODO skipped, spliced frames, print_hex
+	# TODO print_hex
 	if ($frame_mod_16 != 0) {
-		push @current_scan, @decoded_int9[0..255];
+		$current_scan[$frame_mod_16] = \@decoded_int9;
 	} else {
 		if ($print_rowheaders) {
 			say join $sep, $frame_count, $offset, $len, $scan_count, @decoded_int9[0..20];
 			# TODO something about contents of last auxiliary frame?
 		} elsif ($print_tabular) {
-			say join $sep, @current_scan if @current_scan;
+			my $full_scan = assemble_frames(@current_scan);
+			say join $sep, @$full_scan if defined $full_scan;
 		} else {
 			# TODO some header info in comments
-			for my $i (0..$#current_scan) {
-				say join $sep, $scan_count, $i, $current_scan[$i];
+			my $full_scan = assemble_frames(@current_scan);
+			if (defined $full_scan) {
+				for my $i (0..$#$full_scan) {
+					say join $sep, $scan_count, $i+1, $full_scan->[$i];
+				}
+				say "";
 			}
-			say "" if @current_scan;
 		}
 		@current_scan = ();
 	}
@@ -117,9 +123,30 @@ while ($read = sysread $F, $s, 2) {
 
 close $F;
 
+# assemble the contents of data frames into a complete scan.
+# missing frames are replaced with 256 511's.
+# short (frame length = 100) frames are either augmented or replaced, depending
+# on a command line option so that a full frame always contains 3840 values
+sub assemble_frames {
+	return unless @_;
+	my @scan;
+	for my $i (1..15) {
+		my $f = $_[$i];
+		if (defined $f and scalar @$f >= 256) {
+			push @scan, @{$f}[0..255];
+		} elsif (defined $f and $keep_partial) {
+			push @scan, @{$f}[0..18], (511) x (256-19);
+		} else {
+			push @scan, (511) x 256;
+		}
+	}
+	return \@scan;
+}
+
 sub unpack_v1_triplet {
 	my ($sref, $o) = @_;
 	my $tmp = unpack "N", substr $$sref, $o, 4;
+	warn "non-zero low bits at offset $o\n" if $tmp & 0b11111;
 	return (
 		($tmp & 0b11111111100000000000000000000000) >> 23,
 		($tmp & 0b00000000011111111100000000000000) >> 14,
