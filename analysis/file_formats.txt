@@ -240,7 +240,7 @@ Offset    | Type | Meaning, notes
 000a      | i16  | effluent divider status? (same as in the header table and 0x0108)
 000c      | i16  | blank
 000e      | i16  | blank
-0010      | i16  | ?       - some large number e.g. 0x7fff, perhaps a bitfield?
+0010      | i16  | Frame validity bitfield (15 bits, 0 if frame was missing or corrupt)
 0012      | i16  | initial mission scan number, constant (282 or 283)
 0014      | i16  | ?       - some small number (1,2,3,12) - oven number?
 0016-00d6 | i16  | blank
@@ -285,6 +285,10 @@ zero or some other value for a few scans. The location of spikes seems
 to be consistent, i.e. they are at the same scans for most (all?) of
 these values.
 
+The frame validity bitfield tells whether the scan data is complete, and
+if not, which parts are missing. (The data was originally sent from the
+spacecraft as 15 separate frames, and in a few cases some of them were
+missing or corrupt.)
 
 Reproducing the mass spectrograms from the microfilms
 -----------------------------------------------------
@@ -306,6 +310,10 @@ peaks suppressed), multiplied with 1e13. (The actual displayed values
 seem to match exactly, confirming that the interpretation of the file
 outlined in this document is correct.)
 
+Some charts are marked with an "Incomplete scan" note and a bit string,
+these correspond to scans where the frame validity bitfield is not all
+ones (i.e. its numeric value is not 32767).
+
 The most important thing missing is the effluent divider number, which
 could not be reliably determined from the data.
 
@@ -318,10 +326,79 @@ missing here.
 Format of the Viking-1 raw dataset
 ==================================
 
-TODO
+Overview
+--------
+
+These files have a rather complicated structure, they are much harder to
+handle than either of the other two formats described in this document.
+
+There is one file per sample run. Each file consists of packets of
+variable lengths, written sequentially, without gaps. Each packet is
+prefixed by its length, encoded as a 16 bit _little endian_ integer.
+The use of little endian is surprising: it is not used anywhere else in
+any of the files (and it is generally not used in wire protocols or disk
+formats intended to be portable). Yet, that's how it works out.
+So to parse the files, it is enough to read two bytes, decode as a
+little endian integer, then read that many bytes to get the packet's
+content. Repeat this until the end of file.
+
+The size of the packet determines its kind and role. Four distinct sizes
+were observed:
+
+ * 416 bytes: "long data frame" - has a frame header and encodes 256
+   packed data points i.e. a part of a scan. These frames make up the
+   bulk of the files. In some files the auxiliary engineering data are
+   encoded in such long frames (so the most of the frame is filled with
+   0s in these cases).
+ * 100 bytes: "short data frame" - has a frame header and encodes 19
+   packed data points, typically the auxiliary engineering data for each
+   scan. But it sometimes occurs before missing long frames, where it
+   likely encodes a truncated frame, and there are a sequence of blank
+   short frames (one for each blank scan) at the beginning and end of
+   the files.
+ * 80 bytes: fragment, or engineering data? - no frame header.
+   Contains unknown binary data (which resembles the data at offset
+   0x04b2 the reduced file's header). Only occurs in
+   DR005289_F00004.PHYS.
+ * 32 bytes: fragment or garbage? - no frame header. Mostly blank, but
+   contains some non-zero values of unknown meaning in some cases.
+   Occurs near missing frames.
+
+(Sizes in the above list are without the 2 byte length prefix field.)
+
+The most important are the long data frames. 15 of these in a make up a
+complete scan. There are designated fields in the header that make it
+possible to find which frames belong to which scan and in what order.
+Usually frames 1-15 for the same scan are found in that order, followed
+by frame 0 that encodes a set of auxiliary parameters. This last frame
+is long (416 bytes) in 4 files, but short (100 bytes) in the other 2.
+
+All files contain at least a few missing frames, which can be inferred
+from the fact that the frame counter skips. Often, but not always, there
+is a 32 byte packet after the last contiguous frame, and that last frame
+is often corrupted (or it is a short frame, likely filled with garbage).
+
+The "frame validity bitfield" in the reduced files' header can be
+matched to the missing frames in the raw files. Frames that are missing
+or corrupt in the raw files are marked as 0 in that bitfield for the
+corresponding scans in the reduced file.
+
+The header is 72 bytes long (again, without the initial length prefix),
+leaving either 344 or 28 bytes for the payload. As for the data points
+themselves, values are 9-bit unsigned integers, three of which are
+packed into a 32 bit (4 byte) block. This means that a long frame could
+store `344 / 4 * 3 = 258` values, but the last two slots are always
+unused, so a long frame contains 256 values in the end. Similarly,
+a short frame contains `28 / 4 * 3 - 2 = 19` values.
+
+The 80 and 32 byte packets don't seem to use this integer packing
+scheme.
 
 Integer packing
 ---------------
+
+Three 9 bit integers are packed without gaps into a 32 bit field so that
+the remaining 5 lowest bits are always blank.
 
 The following figure illustrates the format:
 
@@ -334,18 +411,33 @@ The following figure illustrates the format:
 Frame header
 ------------
 
-Offsets here are counted from _beginning of the frame_.
+Offsets here are counted from _beginning of the frame_, not including
+the length prefix field.
 
-Offset    | Type | Meaning, notes
---------- | ---- | --------------
-00        | i16  | ?       - either 0x6400 (short frames) or 0xa001 (long frames)
-02        | i8   | ?       - modulo 18 counter (avg period ~18.3)
-03        | i8   | blank
-04        | i16  | ?       - something related to packet size, type, contents, or modulo 16 counter?
-06        | i32  | millisecond-of-day counter, resets at 86400000
-0a        | i16  | ?       - always 0x1b00
-0e        | i16  | day counter?
+Offset    | Type  | Meaning, notes
+--------- | ----  | --------------
+--        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frames)
+00        | i8    | ?       - modulo 18 counter (avg period ~18.3)
+01        | i8    | blank
+02        | i16   | ?       - something related to packet size, type, contents, or modulo 16 counter?
+04        | i32   | millisecond-of-day counter, resets at 86400000
+08        | i16   | ?       - always 0x1b00
+0a        | i16   | day counter?
+
+
+Auxiliary data frames
+---------------------
+
 TODO
+
+Anomalies
+---------
+
+In one case (DR005289_F00004.PHYS) the scan counter jumps back for a few
+frames around a missing frame, but neither the frame timestamp nor the
+overall frame counter skips, so perhaps the scan counter is wrong here.
+
+TODO more
 
 Format of the Viking-2 raw dataset
 ==================================
@@ -392,6 +484,7 @@ Row header
 ----------
 
 Offsets here are counted from _beginning of the record_.
+RRH refers to the row header table in the reduced dataset.
 
 Offset    | Type | Meaning, notes
 --------- | ---- | --------------
@@ -422,7 +515,7 @@ Offset    | Type | Meaning, notes
 70        | i16  | Counter? (increases with 16/scan, but sometimes skips or resets)
 72        | i16  | ?       - mostly 0, but with spikes to 1 and in some files it switches to 1 mid-file
 74        | i16  | ?       - mostly 1, but in some files it switches to 0 near end of file
-76        | i16  | ?       - some large number e.g. 0x7fff, perhaps a bitfield?
+76        | i16  | Frame validity bitfield (same as RRH 0x10)
 78        | i16  | Mission scan number
 
 The note "some value around either x or y, with spikes and jitter" means
