@@ -228,7 +228,8 @@ with the special value -1 (otherwise, all valid values are positive).
 Row header
 ----------
 
-Offsets here are counted from _beginning of the record_.
+Offsets here are in hexadecimal notation, counted from the
+_beginning of the record_.
 
 Offset    | Type | Meaning, notes
 --------- | ---- | --------------
@@ -411,22 +412,54 @@ The following figure illustrates the format:
 Frame header
 ------------
 
-Offsets here are counted from _beginning of the frame_, not including
-the length prefix field.
+Offsets here are in hexadecimal notation, counted from the
+_beginning of the frame_, not including the length prefix field.
 
 Offset    | Type  | Meaning, notes
 --------- | ----  | --------------
---        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frames)
+xx        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frames)
 00        | i8    | ?       - modulo 18 counter (avg period ~18.3)
 01        | i8    | blank
 02        | i16   | ?       - something related to packet size, type, contents, or modulo 16 counter?
 04        | i32   | millisecond-of-day counter, resets at 86400000
 08        | i16   | ?       - always 0x1b00
 0a        | i16   | day counter?
-
+0c        | i8    | ?       - either 0x0b or 0x73 (file 4)
+0d        | i8    | modulo 16 counter, 2 for frame 0, 1 otherwise
+0e-11     | ???   | ?       - 4 bytes, always 0x02040076
+12        | i16   | ?       - fluctuating around a file-dependent constant
+14        | i16   | ?       - either 0x0e00 or 0x2b00
+16        | i16   | ?       - either 0x0a29 or 0x1d72
+18        | i16   | ?       - almost always 0x6800 (except for a few spikes to 0x6804)
+1a        | i16   | ?       - almost, but not quite the value at offset 2, times 8
+1c-1f     | ???   | ?       - 4 bytes, always 0x1a000fa0
+20        | i8    | blank
+21        | i8    | ?       - almost always 0x12 or 0x11 (except for a few +1 spikes)
+22        | i8    | ?       - file-dependent value with lot of random-looking noise
+23-27     | i8    | blank
+28        | i16   | frame counter (continuous, but with varying starting offset, few skips mid-file and jumps backwards near first scan)
+2a        | i16   | ?       - almost always 0xc3 or 0xc2 (with one -1 spike)
+2c        | i8    | ?       - always 0x41
+2d        | i16   | scan counter (i16 but not aligned to 2 byte boundary!)
+2f        | i8    | frame counter (intra-scan, range 0-15)
+30-33     | i8    | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+34        | i16   | blank
+36        | i8    | reset counter (increases every time there is a missed frame, but with starting offset and spikes)
+37-38     | i8    | blank
+39        | i16   | frame counter (continuous, i16 but not aligned to 2 byte boundary!)
+3b        | i8    | ?       - file-dependent constant
+3c        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+3e        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+40-43     | i8    | blank
+44        | i32   | ?       - always 0x04b3e375 (signature for end of header?)
 
 Auxiliary data frames
 ---------------------
+
+TODO
+
+Assembling and converting the scan
+----------------------------------
 
 TODO
 
@@ -483,8 +516,9 @@ offset `7802*n + 122 + 2*i`.
 Row header
 ----------
 
-Offsets here are counted from _beginning of the record_.
-RRH refers to the row header table in the reduced dataset.
+Offsets here are in hexadecimal notation, counted from the
+_beginning of the record_. RRH refers to the row header table in the
+reduced dataset.
 
 Offset    | Type | Meaning, notes
 --------- | ---- | --------------

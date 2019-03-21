@@ -5,7 +5,7 @@
 use strict;
 use warnings;
 use feature qw/say/;
-use Getopt::Long;
+use Getopt::Long qw/:config no_ignore_case bundling/;
 use Pod::Usage;
 
 # table with offsets of known fields

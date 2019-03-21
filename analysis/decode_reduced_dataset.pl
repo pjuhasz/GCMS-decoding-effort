@@ -41,7 +41,7 @@ Print help and exit.
 use strict;
 use warnings;
 use feature qw/say/;
-use Getopt::Long;
+use Getopt::Long qw/:config no_ignore_case bundling/;
 use Pod::Usage;
 
 # tables with offsets of known fields
