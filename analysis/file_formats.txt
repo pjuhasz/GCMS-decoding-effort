@@ -409,6 +409,13 @@ The following figure illustrates the format:
      |   First value   |  Second value   |   Third value   |0 0 0 0 0|
      +-----------------+-----------------+-----------------+---------+
 
+The literature (Rushneck et al., 1978) states that most quantities,
+including the main measurement data (resolved ion current) were sampled
+at 9 bit resolution. It is not known if this peculiar encoding scheme
+was already used by the spacecraft when the data was originally
+transmitted from Mars, or it was introduced during ground processing to
+make it easier to handle data on a computer with a 32 bit word size.
+
 Frame header
 ------------
 
@@ -456,35 +463,73 @@ xx        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frame
 Auxiliary data frames
 ---------------------
 
-TODO
+Every 16th frame (the last one in a scan, with the modulo 16 frame
+counter = 0) encodes a set of engineering parameters. These are the same
+as the ones in the record headers of the reduced format (and those in
+the record headers in the Viking-2 raw format, for that matter), but in
+a different order.
 
-raw	reduced
-5	x
-6	28	rescaled reduced = raw/2+256
-7	27?	partial
-8	25
-9	17
-10	24
-11	16
-12	23
-13	15
-14	22
-15	14
-16	21
-17	13
-18	20
-19	12
-20	19
-21	11
-22	18
-23	10
+Since the frame body uses the same integer packing scheme as the main
+data frames, it's not useful to give their locations as byte offsets, so
+they're listed in the order they are stored instead.
 
+RRH refers to the row header table in the reduced dataset.
+
+Index | Type | Meaning, notes
+----- | ---- | --------------
+1     | i9   | ?     - the suspected effluent divider curve, rescaled, with a modulo 16 pattern overlaid
+2     | i9   | ?     - same as RRH 0x10c, but rescaled: reduced = raw/2+256
+3     | i9   | ?     - same as 0x10a (partial match)
+4     | i9   | ?     - same as RRH 0x106
+5     | i9   | ?     - same as RRH 0x0f6
+6     | i9   | ?     - same as RRH 0x104
+7     | i9   | ?     - same as RRH 0x0f4
+8     | i9   | ?     - same as RRH 0x102
+9     | i9   | ?     - same as RRH 0x0f2
+10    | i9   | ?     - same as RRH 0x100
+11    | i9   | ?     - same as RRH 0x0f0
+12    | i9   | ?     - same as RRH 0x0fe
+13    | i9   | ?     - same as RRH 0x0ee
+14    | i9   | ?     - same as RRH 0x0fc
+15    | i9   | ?     - same as RRH 0x0ec
+16    | i9   | ?     - same as RRH 0x0fa
+17    | i9   | ?     - same as RRH 0x0ea
+18    | i9   | ?     - same as RRH 0x0f8
+19    | i9   | ?     - same as RRH 0x0e8
+
+The first value in the frame is actually the combination of the effluent
+divider status (or the mysterious quantity used to derive it) and the
+modulo 16 repeating pattern.
+The topmost 5 bits of the first value is the same as effluent divider
+status at offset 0xa of the RRH, minus 23. The bottom 4 bits is the
+repeating pattern, which is similar to the one at offset 0x010e of
+the RRH, but not exactly the same.
 
 
 Assembling and converting the scan
 ----------------------------------
 
-TODO
+Because of the complicated file structure described above, it is not
+feasible to express the position of a given data point with a simple,
+general formula. One has to parse the file packet by packet and
+reassemble the scans, paying particular attention to missing frames.
+
+Each long data frame contains 256 packed 9 bit integers, so 15 of those
+frames store the 3840 data points that make up one scan.
+
+The measurement data encodes the logarithm of the resolved ion current
+(or rather, a voltage between 0-5 V that is related to that quantity
+through an calibration curve that is not yet known), encoded as a 9 bit
+integer (range 0-511). The scale is inverted: higher values correspond
+to _lower_ current (unlike in the Viking-2 "raw" files).
+
+The instrument worked by sweeping the voltage exponentially from 2350 V
+down to 125 V (corresponding to a m/z range of approx. 11.5-215), taking
+3840 samples with a fixed cadence - which means that an exponential-like
+transformation needs to be applied to the sample number to get to m/z
+units. The samples are stored in order, meaning that samples
+corresponding to low m/z are stored first in the frames, and the frames
+also follow in order of low to high m/z.
 
 Anomalies
 ---------
@@ -515,7 +560,8 @@ are 61 values in the header and 3840 values for the measurement channels
 for one scan. Many values in the header and all in the data section use
 9 bits only (range 0-511). This is in accordance with the available
 literature (which states that most quantities were sampled at 9 bit
-resolution). 
+resolution). The integer packing scheme found in the Viking 1 files is
+not used here at all.
 
 The measurement data encodes the logarithm of the resolved ion current
 (or rather, a voltage between 0-5 V that is related to that quantity
@@ -529,8 +575,7 @@ down to 125 V (corresponding to a m/z range of approx. 11.5-215), taking
 transformation needs to be applied to the sample number to get to m/z
 units. It is important to note that in the Viking-2 raw files the
 samples are stored in _reverse order_, meaning that samples
-corresponding to high m/z are stored first in the record. The exact
-parameters of the transformation function are not known yet.
+corresponding to high m/z are stored first in the record.
 
 In any case, to get the sample `i` from sample `n`, read 2 bytes from
 offset `7802*n + 122 + 2*i`.
