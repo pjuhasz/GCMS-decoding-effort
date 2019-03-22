@@ -1,3 +1,5 @@
+# gnuplot include script to draw one mass spectrogram
+# variables fn, runid, i must be set before calling this script
 
 set ytics nomirror
 set y2tics
@@ -9,8 +11,20 @@ set y2l "ion current (A)"
 set sty data impulses
 set termoption noenhanced
 
-set yr [0:*]
-set y2r [0:*]
+if (!exists("logs")) {
+	logs = 0
+}
+if (logs) {
+	set yr [*:*]
+	set y2r [*:*]
+	set logs y
+	set logs y2
+} else {
+	set yr [0:*]
+	set yr [0:*]
+	unset logs y
+	unset logs y2
+}
 
 set title sprintf("Mass spectrogram from %s (%d), scan %d ", fn, runid, i)
 

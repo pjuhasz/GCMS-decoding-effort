@@ -1,3 +1,6 @@
+# gnuplot include script to draw one gas chromatogram (time evolution plot)
+# variables fn, runid, mz must be set before calling this script
+
 set xl "scan number"
 set xtics out
 set mxtics
@@ -7,7 +10,16 @@ set yl "ion current (A)"
 set sty data impulses
 set termoption noenhanced
 
-set yr [0:*]
+if (!exists("logs")) {
+	logs = 0
+}
+if (logs) {
+	set yr [*:*]
+	set logs y
+} else {
+	set yr [0:*]
+	unset logs y
+}
 
 set title sprintf("Mass spectrogram from %s (%d), m/z %d ", fn, runid, mz)
 
