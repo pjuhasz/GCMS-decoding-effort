@@ -458,6 +458,29 @@ Auxiliary data frames
 
 TODO
 
+raw	reduced
+5	x
+6	28	rescaled reduced = raw/2+256
+7	27?	partial
+8	25
+9	17
+10	24
+11	16
+12	23
+13	15
+14	22
+15	14
+16	21
+17	13
+18	20
+19	12
+20	19
+21	11
+22	18
+23	10
+
+
+
 Assembling and converting the scan
 ----------------------------------
 
