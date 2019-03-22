@@ -5,7 +5,7 @@ decode:
 	for f in $(V1PATH)/* $(V2PATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; perl decode_reduced_dataset.pl "$$f" > "$$h.decoded"; done
 
 spectrograms: decode
-	plot_all_files.sh
+	./plot_all_files.sh
 
 clean:
 	rm -rf *.decoded
