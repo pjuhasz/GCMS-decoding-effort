@@ -6,7 +6,7 @@
 
 =head1 SYNOPSIS
 
-	decode_reduced_dataset.pl [-d] [-s CHAR] [-r] [-e] [-h] FILE
+	decode_reduced_dataset.pl [-d] [-s CHAR] [-r | -t | -e] [-h] FILE
 
 =head1 OPTIONS
 
@@ -22,11 +22,15 @@ Verbose output for floating point numbers.
 For each decoded number print the hexadecimal and binary representation
 and the calculated mantissa and exponent.
 
+=item B<-t|--tabular>
+
+Print the data in a compact tabular format instead. (One scan per row)
+
 =item B<-r|--rowheaders>
 
 Print data from row headers instead.
 
-=item B<-e|-effluent>
+=item B<-e|--effluent>
 
 Print the table of the (suspected) effluent numbers from the header instead.
 
@@ -77,7 +81,7 @@ my @rowheader = (
 		['Data present',      0x6],
 		['Scan Number',       0x8],
 		['Effluent divider?', 0x00a],
-		['',     0x010],
+		['Frames valid',      0x010],
 		['Init scan number',  0x012],
 		['',     0x014],
 		['',     0x0d8],
@@ -110,12 +114,13 @@ my @rowheader = (
 
 # parse command line options
 my $sep = "\t";
-my ($debug, $print_rowheaders, $print_effluent_table, $help);
+my ($debug, $print_rowheaders, $print_effluent_table, $print_tabular, $help);
 GetOptions(
 	'debug|d!'      => \$debug,
 	'sep|s=s'       => \$sep,
 	'rowheaders|r!' => \$print_rowheaders,
 	'effluent|e!'   => \$print_effluent_table,
+	'tabular|t!'    => \$print_tabular,
 	'help|h!'       => \$help,
 ) or die pod2usage(-exitval => 1, -verbose => 1);
 die pod2usage(-exitval => 1, -verbose => 2) if $help;
@@ -128,14 +133,15 @@ local $/ = \1282;
 
 # read the header and print some of the known fields from it
 my $header = <$F>;
-for (@header_i16) {
-	say '# '.join $sep, $_->[0], get_i16(\$header, $_->[1]);
-}
-for (@header_float){
-	say '# '.join $sep, $_->[0], get_float(\$header, $_->[1]);
-}
-
+if (not $print_tabular) {
+	for (@header_i16) {
+		say '# '.join $sep, $_->[0], get_i16(\$header, $_->[1]);
+	}
+	for (@header_float){
+		say '# '.join $sep, $_->[0], get_float(\$header, $_->[1]);
+	}
 say "#";
+}
 
 if ($print_effluent_table) {
 	# given the option, parse the table of effluent divider numbers from the header and exit 
@@ -165,22 +171,32 @@ while (my $record = <$F>) {
 		# fake record to draw attention to the fact
 		# (and to keep the plot script simple)
 		for my $missing ($last_scan_id+1 .. $real_scan_id-1) {
-			say "# missing scan $missing";
-			say join $sep, $missing, 1, "missing";
-			say "";
+			if ($print_tabular) {
+				say join $sep, (-1) x 230;
+			} else {
+				say "# missing scan $missing";
+				for my $mz (1..230) {
+					say join $sep, $missing, $mz, -1;
+				}
+				say "";
+			}
 		}
 	}
 	$last_scan_id = $real_scan_id;
 
-	# Print some identification information from the row header before
-	# the data
-	for (@rowheader[0..3]) {
-		say '# '.join $sep, $_->[0], get_i16(\$record, $_->[1]);
+	if ($print_tabular) {
+		say join $sep, map get_float(\$record, 1282 - 4*$_), 1..230;
+	} else {
+		# Print some identification information from the row header before
+		# the data
+		for (@rowheader[0..3]) {
+			say '# '.join $sep, $_->[0], get_i16(\$record, $_->[1]);
+		}
+		for my $mz (1..230) {
+			say join $sep, $real_scan_id, $mz, get_float(\$record, 1282 - 4*$mz);
+		}
+		say "";
 	}
-	for my $mz (1..230) {
-		say join $sep, $real_scan_id, $mz, get_float(\$record, 1282 - 4*$mz);
-	}
-	say "";
 }
 
 #######################################
