@@ -640,21 +640,72 @@ time (actually, position within the scan). The reduced data consist of
 linear ion current values as a function of m/z. Clearly, both axes have
 to be transformed.
 
-For the x axis (sample position to m/z) the Time-to-mass A and B
+For the x axis (sample position to m/z) the "Time-to-mass" A and B
 constants from the processed file's header are to be used. (The same
 constants are listed in the preface of the microfilms, so we know that
-they are decoded correctly.) The function `10**(A * x + B)` gives an
-suitable exponential transformation function that maps the [0, 3840]
-range to [11.8, 218.8]. The peaks don't appear to fall to integer m/z's
-when using this transformation function. A possible interpretation of
-Rushneck et al. (1977) is that to derive the resolved ion current for a
-given m, one has to find the highest value from the samples that fall
-within the range [m-0.5, 0+0.5] and use that value for subsequent
-calculations.
+they are decoded correctly.) The function
 
-For the y axis (sampled voltage to calibrated ion current) there are 
-three sets of constants in the header, but the transformation functions
-in which to use them are not yet known.
+	10**(A*x + B)
+
+gives a suitable exponential transformation function that maps the
+[0, 3840] range to [11.8, 218.8]. The peaks don't appear to fall to
+integer m/z's when using this transformation function. A possible
+interpretation of Rushneck et al. (1977) is that to derive the resolved
+ion current for a given m, one has to find the highest value from the
+samples that fall within the range [m-0.5, 0+0.5] and use that value for
+subsequent calculations.
+
+For the y axis (sampled voltage to calibrated ion current) the
+"Volts-to-Amps" constants from the processed file's header are to be
+used. (These too are listed in the prefaces of the microfilms.)
+There are three sets of constants for each sample run, two sets of
+A, B, C and one A, B. The functions to use are
+
+	10**(C*x**2 + B*x + A)
+
+and
+
+	10**(B*x + A)
+
+The numbers listed as "Last RIC used in Volts-to-amps curve 1" and 2
+can be used as thresholds to select from the three functions.
+Plotting these functions in the right ranges with the appropriate
+constants substituted, something like the calibration curve shown
+in the Rushneck et al. (1978) article emerges (or rather a transposed
+version of it).
+
+As an example, here are the constants for sample run 10015:
+
+vt1 =  60
+vt2 = 112
+tA =    0.000330119975842535
+tB =    1.07104396820068
+v1A = -50.7097244262695
+v1B =   1.24799799919128
+v1C =  -0.0102433189749718
+v2A = -15.4362697601318
+v2B =   0.0579058229923248
+v2C =  -0.000205721182283014
+v3A = -13.0402088165283
+v3B =   0.0137846190482378
+
+With these, the following functions can be used to rescale the
+horizontal and vertical axes, respectively:
+
+h(x) = 10.0**(tA*x + tB)
+v(x) = x > vt2 ? 10.0**(v3B*x + v3A) : \
+	x > vt1 ? 10**(v2C*x**2 + v2B*x + v2A) : \
+	10**(v1C*x**2 + v1B*x + v1A)
+
+Plotting one of the scans from the reduced dataset together with the
+corresponding raw scan with these transformations applied, it can be
+seen that they match. Note that the numbering scheme of the files is
+confusing, see correspondence.txt for the correct pairing.
+
+One complication is that for the Viking 1 raw files, one has to invert
+the vertical scale (y' = 511 - y), while for the Viking-2 files the
+horizontal scale has to be inverted (x' = 3840 - x).
+
 
 There is a third set of constants, labelled "mass compensation", but it
 is not known how or where to use them.

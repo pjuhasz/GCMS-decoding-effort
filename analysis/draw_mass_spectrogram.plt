@@ -21,7 +21,7 @@ if (logs) {
 	set logs y2
 } else {
 	set yr [0:*]
-	set yr [0:*]
+	set y2r [0:*]
 	unset logs y
 	unset logs y2
 }
