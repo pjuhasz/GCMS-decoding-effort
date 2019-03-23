@@ -630,3 +630,31 @@ these values.
 The values between offsets 0x40-0x70 seem to be the same as the values
 in the reduced row headers offsets 0xe8-0x118 (apart from missing scans
 in the raw files).
+
+Conversion between the raw and reduced data
+==============================================
+
+The raw data consist of log-scaled ion current (actually, A/D-converted
+voltage) samples encoded as 9 bit integers, as a function of sampling
+time (actually, position within the scan). The reduced data consist of
+linear ion current values as a function of m/z. Clearly, both axes have
+to be transformed.
+
+For the x axis (sample position to m/z) the Time-to-mass A and B
+constants from the processed file's header are to be used. (The same
+constants are listed in the preface of the microfilms, so we know that
+they are decoded correctly.) The function `10**(A * x + B)` gives an
+suitable exponential transformation function that maps the [0, 3840]
+range to [11.8, 218.8]. The peaks don't appear to fall to integer m/z's
+when using this transformation function. A possible interpretation of
+Rushneck et al. (1977) is that to derive the resolved ion current for a
+given m, one has to find the highest value from the samples that fall
+within the range [m-0.5, 0+0.5] and use that value for subsequent
+calculations.
+
+For the y axis (sampled voltage to calibrated ion current) there are 
+three sets of constants in the header, but the transformation functions
+in which to use them are not yet known.
+
+There is a third set of constants, labelled "mass compensation", but it
+is not known how or where to use them.
