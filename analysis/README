@@ -2,7 +2,23 @@ This directory contains documentation about the structure and contents
 of the Viking GCMS raw and reduced binary data files, and a set of
 analysis script to decode and view their contents.
 
+Status:
+-------
+
+All three file formats (reduced, Viking-1 and Viking-2 raw) have been
+reverse engineered, their structure is documented and there is (or will
+be) a working decoder for each format. The relationship between the two
+kinds of files is mostly understood, it is possible to derive the
+reduced data from the raw.
+
+However, the files contain several sets of engineering parameters that
+we don't know how to identify or interpret. There is an important
+auxiliary instrument parameter (the effluent divider number) that would
+be needed for correct interpretation of the measurement data, but it
+can't be inferred from the known fields in the headers.
+
 Files:
+------
 
  * file_formats.txt
    Human-readable text with reverse engineered information about file
@@ -12,9 +28,15 @@ Files:
    Tables that link sample run ids and file names
 
  * decode_reduced_dataset.pl
-   Script to decode one file from the reduced dataset, prints result as
-   a tab separated file (with some header information prefixed with
-   '#' characters) on standard output.
+ * decode_v1_raw.pl
+ * decode_v2_raw.pl (TODO)
+   Script to decode one file from the reduced, Viking-1 raw, and
+   Viking-2 raw datasets, respectively (there are three separate
+   decoders because the file formats are completely different).
+   Prints result as a tab separated file (with some header information
+   prefixed with '#' characters) on the standard output.
+   There are alternative output formats and modes to extract engineering
+   data from the file/record headers.
    Use the --help option for more information.
 
  * interactive.plt
@@ -24,6 +46,13 @@ Files:
    Shell script to create an SVG plot from all files, all mass numbers
    and all scans.
 
+ * draw_mass_spectrogram.plt
+ * draw_time_evolution.plt
+ * files.plt
+   gnuplot scripts designed to be included to the interactive and batch
+   plotters, not really useful on their own.
+
+Usage:
 
 To just decode all the files (currently only from the reduced dataset),
 just run `make`.
@@ -43,5 +72,6 @@ previous or next file, or press the left and right arrow keys to view
 the previous or next scan in the current file.
 Press the 'm' key to switch between mass spectrogram and time evolution
 mode.
+Press 'l' to toggle log scale on the vertical axis.
 
 Prerequisites: perl, gnuplot (at least version 5.0), make, bash, awk
