@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# TODO:
+# insert missing complete scans
+# keep track of missing frames and create frame validity bitfield
+
 =pod
 
 =head1 NAME
