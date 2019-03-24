@@ -614,7 +614,7 @@ Offset    | Type | Meaning, notes
 6a        | i16  | modulo 16 counter (range 1-16)
 6c        | i16  | MIT Scan number
 6e        | i16  | Mission scan number
-70        | i16  | Counter? (increases with 16/scan, but sometimes skips or resets)
+70        | i16  | Frame counter? (increases with 16/scan, but sometimes skips or resets)
 72        | i16  | ?       - mostly 0, but with spikes to 1 and in some files it switches to 1 mid-file
 74        | i16  | ?       - mostly 1, but in some files it switches to 0 near end of file
 76        | i16  | Frame validity bitfield (same as RRH 0x10)
