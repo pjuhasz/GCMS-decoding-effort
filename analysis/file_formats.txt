@@ -163,9 +163,9 @@ Offset    | Type | Meaning, notes
 04a4      | i16  | Last RIC used in Volts-to-amps curve 2
 04a6      | i16  | Last RIC used in Volts-to-amps curve 1
 04a8      | i16  | Serial Number
-04aa      | i16  | Processed on day
-04ac      | i16  | Processed on month
-04ae      | i16  | Processed on year (last two digits)
+04aa      | i16  | Processed on year (last two digits)
+04ac      | i16  | Processed on day
+04ae      | i16  | Processed on month
 04b0      | i16  | Run number
 04b2-0501 | ???  | 80 bytes with unknown meaning
 

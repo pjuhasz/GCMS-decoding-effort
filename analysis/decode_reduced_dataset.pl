@@ -52,9 +52,9 @@ use Pod::Usage;
 my @header_i16 = (
 	['Number of scans',                        0x470],
 	['Run number',                             0x4b0],
-	['Processed on year',                      0x4ae],
-	['Processed on month',                     0x4ac],
-	['Processed on day',                       0x4aa],
+	['Processed on month',                     0x4ae],
+	['Processed on day',                       0x4ac],
+	['Processed on year',                      0x4aa],
 	['Serial Number',                          0x4a8],
 	['Last RIC used in Volts-to-amps curve 1', 0x4a6],
 	['Last RIC used in Volts-to-amps curve 2', 0x4a4],
