@@ -1,15 +1,15 @@
 This directory contains documentation about the structure and contents
 of the Viking GCMS raw and reduced binary data files, and a set of
-analysis script to decode and view their contents.
+analysis scripts to decode and view their contents.
 
 Status:
 -------
 
 All three file formats (reduced, Viking-1 and Viking-2 raw) have been
-reverse engineered, their structure is documented and there is (or will
-be) a working decoder for each format. The relationship between the two
-kinds of files is mostly understood, it is possible to derive the
-reduced data from the raw.
+reverse engineered, their structure is documented and there is a working
+decoder for each format. The relationship between the two kinds of files
+is mostly understood, it is possible to derive the reduced data from
+the raw.
 
 However, the files contain several sets of engineering parameters that
 we don't know how to identify or interpret. There is an important
@@ -29,11 +29,11 @@ Files:
 
  * decode_reduced.pl
  * decode_v1_raw.pl
- * decode_v2_raw.pl (TODO)
-   Script to decode one file from the reduced, Viking-1 raw, and
+ * decode_v2_raw.pl
+   Scripts to decode one file from the reduced, Viking-1 raw, and
    Viking-2 raw datasets, respectively (there are three separate
    decoders because the file formats are completely different).
-   Prints result as a tab separated file (with some header information
+   Print result as a tab separated file (with some header information
    prefixed with '#' characters) on the standard output.
    There are alternative output formats and modes to extract engineering
    data from the file/record headers.
