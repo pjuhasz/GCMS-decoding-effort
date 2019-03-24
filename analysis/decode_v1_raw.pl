@@ -15,8 +15,7 @@ decode_v1_raw.pl - Decode a binary file from the Viking GCMS reduced data set
 Parse one binary data file from the Viking-1 GCMS raw data set, and
 print its decoded contents to the standard output. By default, each
 sample is written in a new row, prefixed with the scan and index number,
-with a newline between scans. A few commented rows of metadata from the
-scan headers are printed before each scan. However, there are options
+with a newline between scans. However, there are options
 to use a more compact tabular output format, or to print row headers
 (engineering data frames) or print all raw frames instead.
 
@@ -74,9 +73,42 @@ use feature qw/say/;
 use Getopt::Long qw/:config no_ignore_case bundling/;
 use Pod::Usage;
 
-# table with offsets of known fields
+# table with offsets, sizes and explanations of known fields
 my @frameheader = (
-# TODO
+	[0x00, 1, 'C', ''],
+	[0x01, 1, 'C', ''],
+	[0x02, 2, 'n', ''],
+	[0x04, 4, 'N', 'millisecond_of_day'],
+	[0x08, 2, 'n', ''],
+	[0x0a, 2, 'n', 'day_counter'],
+	[0x0c, 1, 'C', ''],
+	[0x0d, 1, 'C', 'mod_16_counter'],
+	[0x0e, 4, 'N', ''],
+	[0x12, 2, 'n', ''],
+	[0x14, 2, 'n', ''],
+	[0x16, 2, 'n', ''],
+	[0x18, 2, 'n', ''],
+	[0x1a, 2, 'n', ''],
+	[0x1c, 4, 'N', ''],
+	[0x20, 1, 'C', ''],
+	[0x21, 1, 'C', ''],
+	[0x22, 1, 'C', ''],
+	[0x24, 4, 'N', ''],
+	[0x28, 2, 'n', 'cont_frame_counter_1'],
+	[0x2a, 2, 'n', ''],
+	[0x2c, 1, 'C', ''],
+	[0x2d, 2, 'n', 'scan_counter'],
+	[0x2f, 1, 'C', 'mod_16_frame_counter'],
+	[0x30, 1, 'C', ''],
+	[0x32, 2, 'n', ''],
+	[0x34, 2, 'n', ''],
+	[0x36, 1, 'C', 'reset_counter'],
+	[0x37, 2, 'n', ''],
+	[0x39, 2, 'n', 'cont_frame_counter_2'],
+	[0x3b, 1, 'C', ''],
+	[0x3c, 2, 'n', ''],
+	[0x3e, 2, 'n', ''],
+	[0x40, 4, 'N', ''],
 );
 
 # parse command line options
@@ -108,6 +140,11 @@ my $offset = 0;
 
 my @current_scan;
 
+if ($print_frames) {
+	say '#'.join $sep, qw/"frame_count" "offset" "length" "scan_count" "frame_mod_16"/,
+		map {$_->[3] ? qq{"$_->[3]"} : $_->[0]} @frameheader;
+}
+
 # read the file packet by packet, length prefix first
 while ($read = sysread $F, $s, 2) {
 	# first, get the length then the contents of this packet
@@ -137,7 +174,7 @@ while ($read = sysread $F, $s, 2) {
 		} else {
 			# short or long data frame
 			# TODO known fields from header
-			print join $sep, map f($_), unpack "n36", substr $s, 0, 72;
+			print join $sep, map {f(unpack $_->[2], substr $s, $_->[0], $_->[1])} @frameheader;
 			print $sep;
 			say join $sep, map f($_), @decoded_int9;
 		}

@@ -205,7 +205,7 @@ while (my $record = <$F>) {
 	} else {
 		# Print some identification information from the row header before
 		# the data
-		for (@rowheader[0..3]) {
+		for (@rowheader[0..5]) {
 			say '# '.join $sep, $_->[0], get_i16(\$record, $_->[1]);
 		}
 		for my $mz (1..230) {
