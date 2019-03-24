@@ -28,6 +28,12 @@ GetOptions(
 die pod2usage(-exitval => 1, -verbose => 2) if $help;
 die pod2usage(-exitval => 1, -verbose => 0) unless $ARGV[0];
 
+if ($print_hex) {
+	*f = \&format_hex;
+} else {
+	*f = \&nop;
+}
+
 open my $F, '<', $ARGV[0] or die "Can't open $ARGV[0]";
 
 my ($read, $s);
@@ -61,23 +67,13 @@ while ($read = sysread $F, $s, 2) {
 		print join $sep, $frame_count, $offset, $len, $scan_count, $frame_mod_16, '';
 		if ($len < 100) {
 			# short headerless frame
-			if ($print_hex) {
-				say join $sep, map '0x'.$_, unpack "(H4)".($len/2), substr $s, 0, $len;
-			} else {
-				say join $sep, unpack "n".($len/2), substr $s, 0, $len;
-			}
+			say join $sep, map f($_), unpack "n".($len/2), substr $s, 0, $len;
 		} else {
 			# short or long data frame
 			# TODO known fields from header
-			if ($print_hex) {
-				print join $sep, map '0x'.$_, unpack "(H4)36", substr $s, 0, 72;
-				print $sep;
-				say join $sep, map sprintf("0x%x", $_), @decoded_int9;
-			} else {
-				print join $sep, unpack "n36".($len/2), substr $s, 0, 72;
-				print $sep;
-				say join $sep, @decoded_int9;
-			}
+			print join $sep, map f($_), unpack "n36", substr $s, 0, 72;
+			print $sep;
+			say join $sep, map f($_), @decoded_int9;
 		}
 		$frame_count++;
 		$offset += $len + 2;
@@ -93,22 +89,20 @@ while ($read = sysread $F, $s, 2) {
 
 	# if it is a data frame, accumulate its contents
 	# if it is an auxiliary frame, either print the data from that, or print the entire accumulated scan
-	# TODO print_hex
 	if ($frame_mod_16 != 0) {
 		$current_scan[$frame_mod_16] = \@decoded_int9;
 	} else {
 		if ($print_rowheaders) {
-			say join $sep, $frame_count, $offset, $len, $scan_count, @decoded_int9[0..20];
-			# TODO something about contents of last auxiliary frame?
+			say join $sep, $frame_count, $offset, $len, $scan_count, map f($_), @decoded_int9;
 		} elsif ($print_tabular) {
 			my $full_scan = assemble_frames(@current_scan);
-			say join $sep, @$full_scan if defined $full_scan;
+			say join $sep, map f($_), @$full_scan if defined $full_scan;
 		} else {
 			# TODO some header info in comments
 			my $full_scan = assemble_frames(@current_scan);
 			if (defined $full_scan) {
 				for my $i (0..$#$full_scan) {
-					say join $sep, $scan_count, $i+1, $full_scan->[$i];
+					say join $sep, $scan_count, $i+1, f($full_scan->[$i]);
 				}
 				say "";
 			}
@@ -123,6 +117,7 @@ while ($read = sysread $F, $s, 2) {
 
 close $F;
 
+#######################################
 # assemble the contents of data frames into a complete scan.
 # missing frames are replaced with 256 511's.
 # short (frame length = 100) frames are either augmented or replaced, depending
@@ -152,4 +147,12 @@ sub unpack_v1_triplet {
 		($tmp & 0b00000000011111111100000000000000) >> 14,
 		($tmp & 0b00000000000000000011111111100000) >>  5,
 	);
+}
+
+sub nop {
+	$_[0];
+}
+
+sub format_hex {
+	return sprintf "0x%x", $_[0];
 }
