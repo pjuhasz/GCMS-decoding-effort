@@ -27,7 +27,7 @@ Files:
  * correspondence.txt
    Tables that link sample run ids and file names
 
- * decode_reduced_dataset.pl
+ * decode_reduced.pl
  * decode_v1_raw.pl
  * decode_v2_raw.pl (TODO)
    Script to decode one file from the reduced, Viking-1 raw, and

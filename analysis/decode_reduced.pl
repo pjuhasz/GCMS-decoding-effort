@@ -2,11 +2,27 @@
 
 =pod
 
-=head1 NAME decode_reduced_dataset.pl - Decode the binary files of the Viking GCMS reduced data set
+=head1 NAME
+
+decode_reduced.pl - Decode a binary file from the Viking GCMS reduced data set
 
 =head1 SYNOPSIS
 
-	decode_reduced_dataset.pl [-d] [-s CHAR] [-r | -t | -e] [-h] FILE
+	decode_reduced.pl [-d] [-s CHAR] [-r | -t | -e] [-h] FILE
+
+=head1 DESCRIPTION
+
+Parse one binary data file from the Viking-1 GCMS reduced data set, and
+print its decoded contents to the standard output. By default, each
+sample is written in a new row, prefixed with the scan and index number,
+with a newline between scans. A few commented rows of metadata from the
+scan headers are printed before each scan. However, there are options
+to use a more compact tabular output format, or to print row headers,
+the global file header, or the effluent divider table from the header
+instead.
+
+Missing scans are recognized and handled by inserting a fake scan of all
+-1's.
 
 =head1 OPTIONS
 

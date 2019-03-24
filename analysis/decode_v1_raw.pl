@@ -1,7 +1,73 @@
 #!/usr/bin/perl
 
-# TODO document options
+=pod
 
+=head1 NAME
+
+decode_v1_raw.pl - Decode a binary file from the Viking GCMS reduced data set
+
+=head1 SYNOPSIS
+
+	decode_reduced_dataset.pl [-s CHAR] [-f | -r | -t ] [-k] [-H] [-h] FILE
+
+=head1 DESCRIPTION
+
+Parse one binary data file from the Viking-1 GCMS raw data set, and
+print its decoded contents to the standard output. By default, each
+sample is written in a new row, prefixed with the scan and index number,
+with a newline between scans. A few commented rows of metadata from the
+scan headers are printed before each scan. However, there are options
+to use a more compact tabular output format, or to print row headers
+(engineering data frames) or print all raw frames instead.
+
+Missing frames are recognized and handled so that the reassembled frames
+always have the full 3840 samples. 511 is used to represent missing and
+artificially inserted values.
+
+=head1 OPTIONS
+
+=over
+
+=item B<-s|--sep CHAR>
+
+Set column separator character. Default is a TAB.
+
+=item B<-H|--hex>
+
+Print decoded integers in hexadecimal instead of decimal.
+
+=item B<-t|--tabular>
+
+Print the data in a compact tabular format instead. (One scan per row,
+no header data or auxiliary information)
+
+=item B<-r|--rowheaders>
+
+Print data from row headers (16th frames with engineering data) instead.
+
+=item B<-e|--frames>
+
+Print all the raw frames (one per row) prefixed with the frame count,
+offset, frame length, scan count and frame number within the scan, in
+the order they were read from the file, including the short and
+fragmented frames at the beginning and end of file and near missing
+frames.
+
+=item B<-k|keep-partial>
+
+Keep data from short frames near missed frames. Sometimes the last frame
+before a missed frame is short (with 19 data points instead of 256).
+Normally, these are discarded and replaced with an all 511 fake frame.
+With this option, data from them is kept and augmented with 511's to
+make a full frame.
+
+=item B<-h|--help>
+
+Print help and exit.
+
+=back
+
+=cut
 use strict;
 use warnings;
 use feature qw/say/;
