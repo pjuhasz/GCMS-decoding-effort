@@ -13,9 +13,15 @@ the raw.
 
 However, the files contain several sets of engineering parameters that
 we don't know how to identify or interpret. There is an important
-auxiliary instrument parameter (the effluent divider number) that would
-be needed for correct interpretation of the measurement data, but it
-can't be inferred from the known fields in the headers.
+auxiliary instrument parameter (the effluent divider number), that would
+be needed for correct interpretation of the measurement data, and a few
+others that would be good to know, but they can't be inferred from the
+known fields in the headers.
+
+It is not known why the V1 and V2 raws are in a completely different
+format. All three formats have quirks and inconsistencies that are hard
+to explain. In general, very little is known about the original data
+reduction and archival process.
 
 Files:
 ------
@@ -54,8 +60,10 @@ Files:
 
 Usage:
 
-To just decode all the files (currently only from the reduced dataset),
-just run `make`.
+To just decode all the files, just run `make`.
+
+To extract the engineering data from the scan headers instead, run
+`make headers`.
 
 To create plots in batch mode, run `make spectrograms`.
 Warning: this takes several minutes and creates several thousand files.
@@ -74,4 +82,13 @@ Press the 'm' key to switch between mass spectrogram and time evolution
 mode.
 Press 'l' to toggle log scale on the vertical axis.
 
-Prerequisites: perl, gnuplot (at least version 5.0), make, bash, awk
+
+Prerequisites:
+To run just the decoder scripts, only a basic Perl installation is
+required (core modules, Perl version >= 5.10).
+
+To be able to use the Makefile, GNU make is and a bash-compatible shell
+is required.
+
+To use the gnuplot scripts (either in interactive or batch mode), you
+need gnuplot (at least version 5.0), and awk.
