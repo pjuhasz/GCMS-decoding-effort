@@ -167,7 +167,7 @@ Offset    | Type | Meaning, notes
 04ac      | i16  | Processed on day
 04ae      | i16  | Processed on month
 04b0      | i16  | Run number
-04b2-0501 | ???  | 80 bytes with unknown meaning
+04b2-0501 | text | 80 bytes of description text in EBCDIC
 
 A note about the effluent divider status:
 
@@ -195,7 +195,12 @@ second format. It is possible that this second format encodes the ion
 pump current from which the effluent divider status was derived, but the
 exact correspondence between the two is not known.
 
-Missing/unidentified information: oven temperature, mass compensation
+The 80 byte block at the end of the header is actually EBCDIC text, in a
+strange representation where two byte chunks are written in reverse
+order. When decoded, the texts spell out identification information that
+is very similar to those in the preface of the microfilms, plus a few
+other phrases like "reconstructed tape" or "archive tape". Serial no.,
+oven temperature is contained in the text.
 
 Scan records
 ------------
@@ -357,10 +362,18 @@ were observed:
    likely encodes a truncated frame, and there are a sequence of blank
    short frames (one for each blank scan) at the beginning and end of
    the files.
- * 80 bytes: fragment, or engineering data? - no frame header.
-   Contains unknown binary data (which resembles the data at offset
-   0x04b2 the reduced file's header). Only occurs in
-   DR005289_F00004.PHYS.
+ * 80 bytes: text fragment - no frame header.
+   Contains the following EBCDIC-encoded text:
+
+   GCMSF.XA03202
+   76-033/11:49:18 GMT
+
+   GCMSF.XA03203
+   76-033/12:46:10 GMT
+
+   The meaning of the timestamps is unknown. Earth received time?
+   Only occurs in DR005289_F00004.PHYS (two packets near the beginning,
+   two in the middle of the file).
  * 32 bytes: fragment or garbage? - no frame header. Mostly blank, but
    contains some non-zero values of unknown meaning in some cases.
    Occurs near missing frames.
@@ -701,6 +714,11 @@ Plotting one of the scans from the reduced dataset together with the
 corresponding raw scan with these transformations applied, it can be
 seen that they match. Note that the numbering scheme of the files is
 confusing, see correspondence.txt for the correct pairing.
+
+It is likely that to select the single representative ion current value
+for a given mass number in the reduced data, one has to select the
+maximum among the rescaled ion number values from the mass number range
+[m - 0.5, m + 0.5].
 
 One complication is that for the Viking 1 raw files, one has to invert
 the vertical scale (y' = 511 - y), while for the Viking-2 files the
