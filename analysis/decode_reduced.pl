@@ -170,17 +170,18 @@ my $cp_037 =
 # read the header and print some of the known fields from it
 my $header = <$F>;
 if (not $print_tabular) {
+	# decode the reversed EBCDIC information text
+	my $string = reverse substr $header, 0x4b2, 80;
+	$string =~ s/(.)(.)/$2$1/g;
+	eval '$string =~ tr/' . $cp_037 . '/\000-\377/';
+	say '# Description' . $sep . $string;
+	# decode the rest
 	for (@header_i16) {
 		say '# '.join $sep, $_->[0], get_i16(\$header, $_->[1]);
 	}
 	for (@header_float){
 		say '# '.join $sep, $_->[0], get_float(\$header, $_->[1]);
 	}
-	# decode the reversed EBCDIC information text
-	my $string = reverse substr $header, 0x4b2, 80;
-	$string =~ s/(.)(.)/$2$1/g;
-	eval '$string =~ tr/' . $cp_037 . '/\000-\377/';
-	say '# '.$string;
 say "#";
 }
 
