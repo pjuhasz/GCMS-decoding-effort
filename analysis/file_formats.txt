@@ -133,41 +133,48 @@ parameters relevant to the sample run, numerical constants used for
 calibration/data processing, and a table of some parameter
 for all scans in the sample run.
 
+The first field of the header is the size of the rest of the record,
+as a _little endian_ 16 bit integer. The use of little endian here is
+surprising: it is not used anywhere else in the file (and it is
+generally not used in wire protocols or disk formats intended to be
+portable, but it is used similarly in the Viking-1 and 2 raw formats as
+the packet or record size field).
+
 The following list attempts to enumerate all known fields. Offsets are
 in hexadecimal notation. Type `i16` means big endian 16 bit integer,
 `f` means the floating point format described above.
 
-Offset    | Type | Meaning, notes
---------- | ---- | --------------
-0000      | i16  | ?       - always 0x0005 - row start magic number?
-0002-0078 | i16  | blank
-0080      | i16  | ?       - always 0x0040
-0082      | i16  | ?       - always 0x0040
-0084-046a | i16  | table of effluent divider status, or related (?)
-046c      | i16  | blank
-046e      | i16  | initial mission scan number - 282 or 283
-0470      | i16  | number of scans
-0472      | i16  | blank
-0474      | f    | Volts-to-amps (3) B
-0478      | f    | Volts-to-amps (3) A
-047c      | f    | Volts-to-amps (2) C
-0480      | f    | Volts-to-amps (2) B
-0484      | f    | Volts-to-amps (2) A
-0488      | f    | Volts-to-amps (1) C
-048c      | f    | Volts-to-amps (1) B
-0490      | f    | Volts-to-amps (1) A
-0494      | f    | Mass-compensation B
-0498      | f    | Mass-compensation A
-049c      | f    | Time-to-mass B
-04a0      | f    | Time-to-mass A
-04a4      | i16  | Last RIC used in Volts-to-amps curve 2
-04a6      | i16  | Last RIC used in Volts-to-amps curve 1
-04a8      | i16  | Serial Number
-04aa      | i16  | Processed on year (last two digits)
-04ac      | i16  | Processed on day
-04ae      | i16  | Processed on month
-04b0      | i16  | Run number
-04b2-0501 | text | 80 bytes of description text in EBCDIC
+Offset    | Type  | Meaning, notes
+--------- | ----- | --------------
+0000      | i16le | Size of record (1280, as little endian i16, 0x0005)
+0002-0078 | i16   | blank
+0080      | i16   | ?       - always 0x0040
+0082      | i16   | ?       - always 0x0040
+0084-046a | i16   | table of effluent divider status, or related (?)
+046c      | i16   | blank
+046e      | i16   | initial mission scan number - 282 or 283
+0470      | i16   | number of scans
+0472      | i16   | blank
+0474      | f     | Volts-to-amps (3) B
+0478      | f     | Volts-to-amps (3) A
+047c      | f     | Volts-to-amps (2) C
+0480      | f     | Volts-to-amps (2) B
+0484      | f     | Volts-to-amps (2) A
+0488      | f     | Volts-to-amps (1) C
+048c      | f     | Volts-to-amps (1) B
+0490      | f     | Volts-to-amps (1) A
+0494      | f     | Mass-compensation B
+0498      | f     | Mass-compensation A
+049c      | f     | Time-to-mass B
+04a0      | f     | Time-to-mass A
+04a4      | i16   | Last RIC used in Volts-to-amps curve 2
+04a6      | i16   | Last RIC used in Volts-to-amps curve 1
+04a8      | i16   | Serial Number
+04aa      | i16   | Processed on year (last two digits)
+04ac      | i16   | Processed on day
+04ae      | i16   | Processed on month
+04b0      | i16   | Run number
+04b2-0501 | text  | 80 bytes of description text in EBCDIC
 
 A note about the effluent divider status:
 
@@ -236,47 +243,47 @@ Row header
 Offsets here are in hexadecimal notation, counted from the
 _beginning of the record_.
 
-Offset    | Type | Meaning, notes
---------- | ---- | --------------
-0000      | i16  | ?       - always 0x0005 - row start magic number?
-0002      | i16  | MIT Scan number
-0004      | i16  | GCMS Run ID number
-0006      | i16  | Binary flag, 1 if data present, 0 if all zeroes
-0008      | i16  | Mission scan number
-000a      | i16  | effluent divider status? (same as in the header table and 0x0108)
-000c      | i16  | blank
-000e      | i16  | blank
-0010      | i16  | Frame validity bitfield (15 bits, 0 if frame was missing or corrupt)
-0012      | i16  | initial mission scan number, constant (282 or 283)
-0014      | i16  | ?       - some small number (1,2,3,12) - oven number?
-0016-00d6 | i16  | blank
-00d8      | i16  | ?       - always 0x0004
-00da-00e6 | i16  | blank
-00e8      | i16  | ?       - see below
-00ea      | i16  | ?
-00ec      | i16  | ?
-00ee      | i16  | ?
-00f0      | i16  | ?
-00f2      | i16  | ?
-00f4      | i16  | ?
-00f6      | i16  | ?
-00f8      | i16  | ?       - some value around either 216 or 432, with spikes and jitter
-00fa      | i16  | ?       - some value around either 64 or 128, with spikes and jitter
-00fc      | i16  | ?       - some value around either 115 or 315, with spikes and jitter
-00fe      | i16  | ?       - some value around either 40 or 80, with spikes and jitter
-0100      | i16  | ?       - some value around either 160 or 325, with spikes and jitter
-0102      | i16  | ?       - some value around either 180 or 350, with spikes and jitter
-0104      | i16  | ?       - some value around either 60 or 120, with spikes and jitter
-0106      | i16  | ?       - some value around either 50 or 290, with spikes and jitter
-0108      | i16  | effluent divider status? (same as in the header table and at 0x000a)
-010a      | i16  | ?       - repeating pattern with period 16, value range 0-511
-010c      | i16  | ?       - a smooth curve, somewhat resembling the ones at 0x00e8
-010e      | i16  | ?       - repeating pattern with period 16, value range 0-15
-0110      | i16  | ?       - something resembling the effluent divider status, but with a range of 0-15
-0112      | i16  | modulo 16 counter (range 1-16)
-0114      | i16  | MIT Scan number
-0116      | i16  | Mission scan number
-0118      | i16  | Counter? (increases with 16/scan, but sometimes skips or resets)
+Offset    | Type  | Meaning, notes
+--------- | ----- | --------------
+0000      | i16le | Size of rest of record (1280, as little endian i16, 0x0005)
+0002      | i16   | MIT Scan number
+0004      | i16   | GCMS Run ID number
+0006      | i16   | Binary flag, 1 if data present, 0 if all zeroes
+0008      | i16   | Mission scan number
+000a      | i16   | effluent divider status? (same as in the header table and 0x0108)
+000c      | i16   | blank
+000e      | i16   | blank
+0010      | i16   | Frame validity bitfield (15 bits, 0 if frame was missing or corrupt)
+0012      | i16   | initial mission scan number, constant (282 or 283)
+0014      | i16   | ?       - some small number (1,2,3,12) - oven number?
+0016-00d6 | i16   | blank
+00d8      | i16   | ?       - always 0x0004
+00da-00e6 | i16   | blank
+00e8      | i16   | ?       - see below
+00ea      | i16   | ?
+00ec      | i16   | ?
+00ee      | i16   | ?
+00f0      | i16   | ?
+00f2      | i16   | ?
+00f4      | i16   | ?
+00f6      | i16   | ?
+00f8      | i16   | ?       - some value around either 216 or 432, with spikes and jitter
+00fa      | i16   | ?       - some value around either 64 or 128, with spikes and jitter
+00fc      | i16   | ?       - some value around either 115 or 315, with spikes and jitter
+00fe      | i16   | ?       - some value around either 40 or 80, with spikes and jitter
+0100      | i16   | ?       - some value around either 160 or 325, with spikes and jitter
+0102      | i16   | ?       - some value around either 180 or 350, with spikes and jitter
+0104      | i16   | ?       - some value around either 60 or 120, with spikes and jitter
+0106      | i16   | ?       - some value around either 50 or 290, with spikes and jitter
+0108      | i16   | effluent divider status? (same as in the header table and at 0x000a)
+010a      | i16   | ?       - repeating pattern with period 16, value range 0-511
+010c      | i16   | ?       - a smooth curve, somewhat resembling the ones at 0x00e8
+010e      | i16   | ?       - repeating pattern with period 16, value range 0-15
+0110      | i16   | ?       - something resembling the effluent divider status, but with a range of 0-15
+0112      | i16   | modulo 16 counter (range 1-16)
+0114      | i16   | MIT Scan number
+0116      | i16   | Mission scan number
+0118      | i16   | Counter? (increases with 16/scan, but sometimes skips or resets)
 
 The plots of the eight values at offsets 0xe8-0xf6 are very similar to
 each other within the same data file, looking almost like shifted copies
@@ -341,9 +348,6 @@ handle than either of the other two formats described in this document.
 There is one file per sample run. Each file consists of packets of
 variable lengths, written sequentially, without gaps. Each packet is
 prefixed by its length, encoded as a 16 bit _little endian_ integer.
-The use of little endian is surprising: it is not used anywhere else in
-any of the files (and it is generally not used in wire protocols or disk
-formats intended to be portable). Yet, that's how it works out.
 So to parse the files, it is enough to read two bytes, decode as a
 little endian integer, then read that many bytes to get the packet's
 content. Repeat this until the end of file.
@@ -433,45 +437,45 @@ Frame header
 ------------
 
 Offsets here are in hexadecimal notation, counted from the
-_beginning of the frame_, not including the length prefix field.
+_beginning of the packet_, including the length prefix field.
 
 Offset    | Type  | Meaning, notes
 --------- | ----  | --------------
-xx        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frames)
-00        | i8    | ?       - modulo 18 counter (avg period ~18.3)
-01        | i8    | blank
-02        | i16   | ?       - something related to packet size, type, contents, or modulo 16 counter?
-04        | i32   | millisecond-of-day counter, resets at 86400000
-08        | i16   | ?       - always 0x1b00
-0a        | i16   | day counter?
-0c        | i8    | ?       - either 0x0b or 0x73 (file 4)
-0d        | i8    | modulo 16 counter, 2 for frame 0, 1 otherwise
-0e-11     | ???   | ?       - 4 bytes, always 0x02040076
-12        | i16   | ?       - fluctuating around a file-dependent constant
-14        | i16   | ?       - either 0x0e00 or 0x2b00
-16        | i16   | ?       - either 0x0a29 or 0x1d72
-18        | i16   | ?       - almost always 0x6800 (except for a few spikes to 0x6804)
-1a        | i16   | ?       - almost, but not quite the value at offset 2, times 8
-1c-1f     | ???   | ?       - 4 bytes, always 0x1a000fa0
-20        | i8    | blank
-21        | i8    | ?       - almost always 0x12 or 0x11 (except for a few +1 spikes)
-22        | i8    | ?       - file-dependent value with lot of random-looking noise
-23-27     | i8    | blank
-28        | i16   | frame counter (continuous, but with varying starting offset, few skips mid-file and jumps backwards near first scan)
-2a        | i16   | ?       - almost always 0xc3 or 0xc2 (with one -1 spike)
-2c        | i8    | ?       - always 0x41
-2d        | i16   | scan counter (i16 but not aligned to 2 byte boundary!)
-2f        | i8    | frame counter (intra-scan, range 0-15)
-30-33     | i8    | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
-34        | i16   | blank
-36        | i8    | reset counter (increases every time there is a missed frame, but with starting offset and spikes)
-37-38     | i8    | blank
-39        | i16   | frame counter (continuous, i16 but not aligned to 2 byte boundary!)
-3b        | i8    | ?       - file-dependent constant
-3c        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+00        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frames)
+02        | i8    | ?       - modulo 18 counter (avg period ~18.3)
+03        | i8    | blank
+04        | i16   | ?       - something related to packet size, type, contents, or modulo 16 counter?
+06        | i32   | millisecond-of-day counter, resets at 86400000
+0a        | i16   | ?       - always 0x1b00
+0c        | i16   | day counter?
+0e        | i8    | ?       - either 0x0b or 0x73 (file 4)
+0f        | i8    | modulo 16 counter, 2 for frame 0, 1 otherwise
+11-13     | ???   | ?       - 4 bytes, always 0x02040076
+14        | i16   | ?       - fluctuating around a file-dependent constant
+16        | i16   | ?       - either 0x0e00 or 0x2b00
+18        | i16   | ?       - either 0x0a29 or 0x1d72
+1a        | i16   | ?       - almost always 0x6800 (except for a few spikes to 0x6804)
+1c        | i16   | ?       - almost, but not quite the value at offset 2, times 8
+1e-21     | ???   | ?       - 4 bytes, always 0x1a000fa0
+22        | i8    | blank
+23        | i8    | ?       - almost always 0x12 or 0x11 (except for a few +1 spikes)
+24        | i8    | ?       - file-dependent value with lot of random-looking noise
+25-29     | i8    | blank
+2a        | i16   | frame counter (continuous, but with varying starting offset, few skips mid-file and jumps backwards near first scan)
+2c        | i16   | ?       - almost always 0xc3 or 0xc2 (with one -1 spike)
+2e        | i8    | ?       - always 0x41
+2f        | i16   | scan counter (i16 but not aligned to 2 byte boundary!)
+31        | i8    | frame counter (intra-scan, range 0-15)
+32-35     | i8    | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+36        | i16   | blank
+38        | i8    | reset counter (increases every time there is a missed frame, but with starting offset and spikes)
+39-3a     | i8    | blank
+3b        | i16   | frame counter (continuous, i16 but not aligned to 2 byte boundary!)
+3d        | i8    | ?       - file-dependent constant
 3e        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
-40-43     | i8    | blank
-44        | i32   | ?       - always 0x04b3e375 (signature for end of header?)
+40        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+42-45     | i8    | blank
+46        | i32   | ?       - always 0x04b3e375 (signature for end of header?)
 
 Auxiliary data frames
 ---------------------
@@ -568,9 +572,11 @@ missing scans in the middle of the file (fortunately the scan counters
 in the headers make it possible to identify these cases).
 
 Each record is made up of a 122 byte header and 7680 bytes of data.
-All values are encoded as big endian unsigned 16 bit integers, so there
-are 61 values in the header and 3840 values for the measurement channels
-for one scan. Many values in the header and all in the data section use
+All values (except the first) are encoded as big endian unsigned 16 bit
+integers. The first value is the size of the rest of the record, encoded
+as a 16 bit _little endian_ integer. In the rest of the record there are
+60 values in the header and 3840 values for the measurement channels for
+one scan. Many values in the header and all in the data section use
 9 bits only (range 0-511). This is in accordance with the available
 literature (which states that most quantities were sampled at 9 bit
 resolution). The integer packing scheme found in the Viking 1 files is
@@ -578,7 +584,7 @@ not used here at all.
 
 The measurement data encodes the logarithm of the resolved ion current
 (or rather, a voltage between 0-5 V that is related to that quantity
-through a calibration curve that is not yet known), encoded as a 9 bit
+through a calibration curve desribed later), encoded as a 9 bit
 integer. Here higher values correspond to higher current (unlike in the
 Viking-1 raw files).
 
@@ -601,37 +607,37 @@ Offsets here are in hexadecimal notation, counted from the
 _beginning of the record_. RRH refers to the row header table in the
 reduced dataset.
 
-Offset    | Type | Meaning, notes
---------- | ---- | --------------
-00        | i16  | ?       - always 0x781e - row start magic number?
-02-2c     | i16  | blank
-2e        | i16  | ?       - some small number (1,2,3,12) - oven number? (same as RRH 0x14)
-30        | i16  | initial mission scan number, constant (282 or 283) (same as RRH 0x12)
-32-3a     | i16  | blank
-3c        | i16  | ?       - 0, except for DR005967_F00007 where it changes to 1 mid-file
-3e        | i16  | ?       - 0, except for DR005967_F00007 where it changes to 4474 mid-file
-40-4e     | i16  | ?       - 8 similar, shifted curves, similar to RRH 0xe8-0xf6
-50        | i16  | ?       - some value around either 216 or 432, with spikes and jitter
-52        | i16  | ?       - some value around either 64 or 128, with spikes and jitter
-54        | i16  | ?       - some value around either 115 or 315, with spikes and jitter
-56        | i16  | ?       - some value around either 40 or 80, with spikes and jitter
-58        | i16  | ?       - some value around either 160 or 325, with spikes and jitter
-5a        | i16  | ?       - some value around either 185 or 350, with spikes and jitter
-5c        | i16  | ?       - some value around either 62 or 126, with spikes and jitter
-5e        | i16  | ?       - some value around either 77 or 294, with spikes and jitter
-60        | i16  | effluent divider status?
-62        | i16  | ?       - repeating pattern with period 16, value range 0-511
-64        | i16  | ?       - a smooth curve, somewhat resembling the ones at 0x40
-66        | i16  | ?       - repeating pattern with period 16, value range 0-15
-68        | i16  | ?       - something resembling the effluent divider status, but with a range of 0-15
-6a        | i16  | modulo 16 counter (range 1-16)
-6c        | i16  | MIT Scan number
-6e        | i16  | Mission scan number
-70        | i16  | Frame counter? (increases with 16/scan, but sometimes skips or resets)
-72        | i16  | ?       - mostly 0, but with spikes to 1 and in some files it switches to 1 mid-file
-74        | i16  | ?       - mostly 1, but in some files it switches to 0 near end of file
-76        | i16  | Frame validity bitfield (same as RRH 0x10)
-78        | i16  | Mission scan number
+Offset    | Type  | Meaning, notes
+--------- | ----- | --------------
+00        | i16le | Size of rest of record (7800, as little endian i16, 0x781e)
+02-2c     | i16   | blank
+2e        | i16   | ?       - some small number (1,2,3,12) - oven number? (same as RRH 0x14)
+30        | i16   | initial mission scan number, constant (282 or 283) (same as RRH 0x12)
+32-3a     | i16   | blank
+3c        | i16   | ?       - 0, except for DR005967_F00007 where it changes to 1 mid-file
+3e        | i16   | ?       - 0, except for DR005967_F00007 where it changes to 4474 mid-file
+40-4e     | i16   | ?       - 8 similar, shifted curves, similar to RRH 0xe8-0xf6
+50        | i16   | ?       - some value around either 216 or 432, with spikes and jitter
+52        | i16   | ?       - some value around either 64 or 128, with spikes and jitter
+54        | i16   | ?       - some value around either 115 or 315, with spikes and jitter
+56        | i16   | ?       - some value around either 40 or 80, with spikes and jitter
+58        | i16   | ?       - some value around either 160 or 325, with spikes and jitter
+5a        | i16   | ?       - some value around either 185 or 350, with spikes and jitter
+5c        | i16   | ?       - some value around either 62 or 126, with spikes and jitter
+5e        | i16   | ?       - some value around either 77 or 294, with spikes and jitter
+60        | i16   | effluent divider status?
+62        | i16   | ?       - repeating pattern with period 16, value range 0-511
+64        | i16   | ?       - a smooth curve, somewhat resembling the ones at 0x40
+66        | i16   | ?       - repeating pattern with period 16, value range 0-15
+68        | i16   | ?       - something resembling the effluent divider status, but with a range of 0-15
+6a        | i16   | modulo 16 counter (range 1-16)
+6c        | i16   | MIT Scan number
+6e        | i16   | Mission scan number
+70        | i16   | Frame counter? (increases with 16/scan, but sometimes skips or resets)
+72        | i16   | ?       - mostly 0, but with spikes to 1 and in some files it switches to 1 mid-file
+74        | i16   | ?       - mostly 1, but in some files it switches to 0 near end of file
+76        | i16   | Frame validity bitfield (same as RRH 0x10)
+78        | i16   | Mission scan number
 
 The note "some value around either x or y, with spikes and jitter" means
 that the value is almost constant within a file, but there small
