@@ -45,6 +45,11 @@ Files:
    data from the file/record headers.
    Use the --help option for more information.
 
+ * convert_raw.pl
+   Take one decoded file emitted by either of the raw decoder scripts,
+   convert the values in it, detect peaks, and print in a format
+   comparable to the corresponding reduced file.
+
  * interactive.plt
    gnuplot script for viewing spectrograms interactively. See below.
 
