@@ -1,8 +1,69 @@
 #!/usr/bin/perl
 
+
+=pod
+
+=head1 NAME
+
+convert_raw.pl - Convert a decoded file from the Viking GCMS raw data
+
+=head1 SYNOPSIS
+
+	convert_raw.pl [-d] [-s CHAR] [-t NUMBER] [-a] [-h] FILE
+
+=head1 DESCRIPTION
+
+Convert one decoded text data file (emitted by either C<decode_v1_raw.pl>
+or C<decode_v2_raw.pl>) so that the vertical and horizontal axes are
+transformed to the same scale as those of the reduced dataset. The
+result is printed to the standard output.
+
+By default, the program operates in peak detection mode, that is, the
+maximum calculated ion current is selected from the mass number range
+[m-t, m+t] (where t is a threshold value, by default 0.5), and only that
+single value (the candidate peak) is printed for each mass number.
+
+With the C<-a> option peak detection is disabled, all points from the
+input are printed after the (vertical and horizontal) transformation
+functions are applied to them.
+
+NB: The appropriate calibration constants for the transformation functions
+are selected by the input filename.
+
+=head1 OPTIONS
+
+=over
+
+=item B<-s|--sep CHAR>
+
+Set column separator character. Default is a TAB.
+
+=item B<-a|--all-points>
+
+Disable peak detection, print all transformed points.
+
+=item B<-t|--threshold NUMBER>
+
+Change the peak detection mass number threshold, by default 0.5.
+
+=item B<-d|--debug>
+
+In peak detection mode print the calculated (likely non-integer)
+mass number of the candidate peak.
+
+=item B<-h|--help>
+
+Print help and exit.
+
+=back
+
+=cut
+
 use strict;
 use warnings;
 use feature qw/say/;
+use Getopt::Long qw/:config no_ignore_case bundling/;
+use Pod::Usage;
 
 my %constants = (
 	'DR005967_F00006.decoded' => {
@@ -295,28 +356,19 @@ my %constants = (
 	}
 );
 
-# TODO invert x or y
-sub h {
-	my ($x, $f) = @_;
-	my $c = $constants{$f};
-	#$x = 3841 - $x if $c->{invert_horizontal};
-	return 10 ** ($c->{tA} * $x + $c->{tB});
-}
-
-sub v {
-	my ($x, $f) = @_;
-	my $c = $constants{$f};
-	$x = 511 - $x if $c->{invert_vertical};
-	my $v =
-		$x > $c->{vt2} ? $c->{v3B} * $x + $c->{v3A} :
-		$x > $c->{vt1} ? $c->{v2C} * $x**2 + $c->{v2B} * $x + $c->{v2A} :
-						$c->{v1C} * $x**2 + $c->{v1B} * $x + $c->{v1A};
-	return 10 ** $v;
-}
-
-# TODO option
-my $print_all_points = 0;
+# parse command line options
 my $sep = "\t";
+my ($debug, $print_all_points, $help);
+my $threshold = 0.5;
+GetOptions(
+	'debug|d!'      => \$debug,
+	'sep|s=s'       => \$sep,
+	'all_points|a!' => \$print_all_points,
+	'threshold|t=f' => \$threshold,
+	'help|h!'       => \$help,
+) or die pod2usage(-exitval => 1, -verbose => 1);
+die pod2usage(-exitval => 1, -verbose => 2) if $help;
+die pod2usage(-exitval => 1, -verbose => 0) unless $ARGV[0];
 
 my @scans;
 
@@ -348,14 +400,24 @@ if ($print_all_points) {
 		next unless defined $scans[$s];
 		my @reduced;
 		for (@{$scans[$s]}) {
-			my $int_m = int($_->[0]+0.5);
-			push @{$reduced[$int_m]}, $_;
+			my $int_m = int($_->[0] + 0.5);
+			if (abs($_->[0] - $int_m) < $threshold) {
+				push @{$reduced[$int_m]}, $_;
+			}
 		}
 		for my $m (12..220) {
 			my $sorted = [ sort {$b->[1] <=> $a->[1]} @{$reduced[$m]} ];
 			my $maxm = $sorted->[0]->[0];
 			my $maxv = $sorted->[0]->[1];
-			say join $sep, $s, $m, $maxv, $maxm;
+			if (not defined $maxv) {
+				$maxv = -1;
+				$maxm = $m;
+			}
+			if ($debug) {
+				say join $sep, $s, $m, $maxv, $maxm;
+			} else {
+				say join $sep, $s, $m, $maxv;
+			}
 		}
 		
 		say "";
@@ -363,4 +425,23 @@ if ($print_all_points) {
 }
 
 
+#####################################################
+
+sub h {
+	my ($x, $f) = @_;
+	my $c = $constants{$f};
+	#$x = 3841 - $x if $c->{invert_horizontal};
+	return 10 ** ($c->{tA} * $x + $c->{tB});
+}
+
+sub v {
+	my ($x, $f) = @_;
+	my $c = $constants{$f};
+	$x = 511 - $x if $c->{invert_vertical};
+	my $v =
+		$x > $c->{vt2} ? $c->{v3B} * $x + $c->{v3A} :
+		$x > $c->{vt1} ? $c->{v2C} * $x**2 + $c->{v2B} * $x + $c->{v2A} :
+						$c->{v1C} * $x**2 + $c->{v1B} * $x + $c->{v1A};
+	return 10 ** $v;
+}
 
