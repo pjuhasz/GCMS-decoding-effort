@@ -466,16 +466,28 @@ Offset    | Type  | Meaning, notes
 2e        | i8    | ?       - always 0x41
 2f        | i16   | scan counter (i16 but not aligned to 2 byte boundary!)
 31        | i8    | frame counter (intra-scan, range 0-15)
-32-35     | i8    | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+32-35     | ???   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
 36        | i16   | blank
 38        | i8    | reset counter (increases every time there is a missed frame, but with starting offset and spikes)
 39-3a     | i8    | blank
 3b        | i16   | frame counter (continuous, i16 but not aligned to 2 byte boundary!)
 3d        | i8    | ?       - file-dependent constant
-3e        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
-40        | i16   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
+3e-41     | ???   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
 42-45     | i8    | blank
 46        | i32   | ?       - always 0x04b3e375 (signature for end of header?)
+
+It is likely that the frame headers contain only housekeeping
+information related to the transmission of data from Mars to Earth, and
+not anything directly useful for decoding and interpreting GCMS science
+data. Yet, it is not directly a dump of raw spacecraft telemetry,
+because the format described above does not match the known Viking
+lander telemetry formats (e.g. it doesn't seem to have the GCGS
+timestamp, but it has several fields that must have been calculated
+and added during ground processing, e.g. the 24 hour msec counter).
+
+In the two files where some of the 32 byte long packets contain non-zero
+data, those data can be linked to the non-zero values of at header
+offset 0x32 and 0x3e.
 
 Auxiliary data frames
 ---------------------
