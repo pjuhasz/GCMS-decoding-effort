@@ -168,6 +168,7 @@ my $cp_037 =
 	'\x44\x45\x42\x46\x43\x47\x9C\x48\x54\x51\x52\x53\x58\x55\x56\x57' .
 	'\x8C\x49\xCD\xCE\xCB\xCF\xCC\xE1\x70\xDD\xDE\xDB\xDC\x8D\x8E\xDF';
 
+my $first_real_scan_offset;
 
 # read the file packet by packet, length prefix first
 while ($read = sysread $F, $s, 2) {
@@ -189,6 +190,10 @@ while ($read = sysread $F, $s, 2) {
 		@decoded_int9 = map unpack_v1_triplet(\$s, 72 + $_*4), 0..($len-72)/4-1;
 	}
 
+	if ($len == 416 and not defined $first_real_scan_offset) {
+		$first_real_scan_offset = $scan_count - 1;
+	}
+
 	# print all frames and exit if required
 	if ($print_frames) {
 		print join $sep, $frame_count, $offset, $len, $scan_count, $frame_mod_16, '';
@@ -204,7 +209,6 @@ while ($read = sysread $F, $s, 2) {
 			say join $sep, map f($_), unpack "n".($len/2), substr $s, 0, $len;
 		} else {
 			# short or long data frame
-			# TODO known fields from header
 			print join $sep, map {f(unpack $_->[2], substr $s, $_->[0], $_->[1])} @frameheader;
 			print $sep;
 			say join $sep, map f($_), @decoded_int9;
@@ -229,14 +233,18 @@ while ($read = sysread $F, $s, 2) {
 		if ($print_rowheaders) {
 			say join $sep, $frame_count, $offset, $len, $scan_count, map f($_), @decoded_int9;
 		} elsif ($print_tabular) {
+			# FIXME entire missing scans are not indicated or replaced
 			my $full_scan = assemble_frames(@current_scan);
 			say join $sep, map f($_), @$full_scan if defined $full_scan;
 		} else {
 			# TODO some header info in comments
 			my $full_scan = assemble_frames(@current_scan);
 			if (defined $full_scan) {
+				say join $sep, '# Scan number', $scan_count;
+				say join $sep, '# Mit scan number', $scan_count - $first_real_scan_offset;
+				say join $sep, '# Frames valid', calc_frames_valid_indicator(@current_scan);
 				for my $i (0..$#$full_scan) {
-					say join $sep, $scan_count, $i+1, f($full_scan->[$i]);
+					say join $sep, $scan_count - $first_real_scan_offset, $i+1, f($full_scan->[$i]);
 				}
 				say "";
 			}
@@ -270,6 +278,17 @@ sub assemble_frames {
 		}
 	}
 	return \@scan;
+}
+
+sub calc_frames_valid_indicator {
+	my $ind = 0;
+	for my $i (1..15) {
+		my $f = $_[$i];
+		if (defined $f and scalar @$f >= 256) {
+			$ind |= 1<<($i-1)
+		}
+	}
+	return $ind;
 }
 
 sub unpack_v1_triplet {
