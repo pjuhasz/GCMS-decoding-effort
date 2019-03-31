@@ -730,8 +730,8 @@ v(x) = x > vt2 ? 10.0**(v3B*x + v3A) : \
 
 Plotting one of the scans from the reduced dataset together with the
 corresponding raw scan with these transformations applied, it can be
-seen that they match. Note that the numbering scheme of the files is
-confusing, see correspondence.txt for the correct pairing.
+seen that they match, but see below. Note that the numbering scheme of
+the files is confusing, see correspondence.txt for the correct pairing.
 
 It is likely that to select the single representative ion current value
 for a given mass number in the reduced data, one has to select the
@@ -745,3 +745,7 @@ horizontal scale has to be inverted (x' = 3840 - x).
 
 There is a third set of constants, labelled "mass compensation", but it
 is not known how or where to use them.
+
+The conversion algorithm described above produces a systematic relative
+error of about -5e-5, the reason of which is unknown. For file
+DR005289_F00004 the match is quite bad.
