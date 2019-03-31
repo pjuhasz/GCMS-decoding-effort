@@ -15,12 +15,17 @@ headers:
 	for f in $(V1REDPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; perl decode_v1_raw.pl -r "$$f" > "$$h.header"; done
 	for f in $(V2REDPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; perl decode_v2_raw.pl -r "$$f" > "$$h.header"; done
 
+convert:
+	for f in $(V1REDPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; r="$$h.decoded"; perl convert_raw.pl -c "$$r" > "$$h.converted"; done
+	for f in $(V2REDPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; r="$$h.decoded"; perl convert_raw.pl -c "$$r" > "$$h.converted"; done
+
 spectrograms: decode
 	./plot_all_files.sh
 
 clean:
 	rm -rf *.decoded
 	rm -rf *.header
+	rm -rf *.converted
 	rm -rf spectrograms
 
 PHONY: decode headers clean spectrograms

@@ -9,7 +9,7 @@ convert_raw.pl - Convert a decoded file from the Viking GCMS raw data
 
 =head1 SYNOPSIS
 
-	convert_raw.pl [-d] [-s CHAR] [-t NUMBER] [-a] [-h] FILE
+	convert_raw.pl [-d] [-s CHAR] [-t NUMBER] [-a] [-c] [-h] FILE
 
 =head1 DESCRIPTION
 
@@ -27,8 +27,14 @@ With the C<-a> option peak detection is disabled, all points from the
 input are printed after the (vertical and horizontal) transformation
 functions are applied to them.
 
+The C<-c> option facilitates comparison with the corresponding reduced
+file.
+
 NB: The appropriate calibration constants for the transformation functions
-are selected by the input filename.
+are selected by the input filename, which must follow the template
+C<DR00tttt_F---nn.decoded>, where C<tttt> is either 5967 or 5289, and
+C<nn> goes from 01 to 10. In other words, input file names must be derived
+from the originals with the extension changed to C<.decoded>.
 
 =head1 OPTIONS
 
@@ -46,10 +52,16 @@ Disable peak detection, print all transformed points.
 
 Change the peak detection mass number threshold, by default 0.5.
 
+=item B<-c|--compare>
+
+Read the corresponding reduced file too, and for each scan and mass number
+print both the transformed value from the raw file and the corresponding
+number from the reduced file.
+
 =item B<-d|--debug>
 
 In peak detection mode print the calculated (likely non-integer)
-mass number of the candidate peak.
+mass number of the candidate peak in an additional column.
 
 =item B<-h|--help>
 
@@ -69,6 +81,7 @@ my %constants = (
 	'DR005967_F00006.decoded' => {
 	# Run number	10007
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00001.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330402282997966,
@@ -87,6 +100,7 @@ my %constants = (
 	'DR005967_F00007.decoded' => {
 	# Run number	10032
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00002.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -105,6 +119,7 @@ my %constants = (
 	'DR005967_F00008.decoded' => {
 	# Run number	10033
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00003.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -123,6 +138,7 @@ my %constants = (
 	'DR005967_F00009.decoded' => {
 	# Run number	10034
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00004.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -141,6 +157,7 @@ my %constants = (
 	'DR005967_F00010.decoded' => {
 	# Run number	10035
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00005.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -159,6 +176,7 @@ my %constants = (
 	'DR005967_F00001.decoded' => {
 	# Run number	10036
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00006.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -177,6 +195,7 @@ my %constants = (
 	'DR005967_F00002.decoded' => {
 	# Run number	10037
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00007.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -195,6 +214,7 @@ my %constants = (
 	'DR005967_F00003.decoded' => {
 	# Run number	10038
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00008.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -213,6 +233,7 @@ my %constants = (
 	'DR005967_F00004.decoded' => {
 	# Run number	10039
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00009.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -231,6 +252,7 @@ my %constants = (
 	'DR005967_F00005.decoded' => {
 	# Run number	10041
 		invert_horizontal => 1,
+		raw_file => 'DR005388_F00010.decoded',
 		vt1 => 55,
 		vt2 => 110,
 		tA  => 0.000330842973198742,
@@ -249,6 +271,7 @@ my %constants = (
 	'DR005289_F00004.decoded' => {
 	# Run number	10008
 		invert_vertical => 1,
+		raw_file => 'DR005631_F00001.decoded',
 		vt1 => 60,
 		vt2 => 112,
 		tA  => 0.000329889997374266,
@@ -267,6 +290,7 @@ my %constants = (
 	'DR005289_F00005.decoded' => {
 	# Run number	10015
 		invert_vertical => 1,
+		raw_file => 'DR005631_F00002.decoded',
 		vt1 => 60,
 		vt2 => 112,
 		tA  => 0.000330119975842535,
@@ -285,6 +309,7 @@ my %constants = (
 	'DR005289_F00006.decoded' => {
 	# Run number	10018
 		invert_vertical => 1,
+		raw_file => 'DR005631_F00003.decoded',
 		vt1 => 60,
 		vt2 => 112,
 		tA  => 0.000330440350808203,
@@ -303,6 +328,7 @@ my %constants = (
 	'DR005289_F00001.decoded' => {
 	# Run number	10023
 		invert_vertical => 1,
+		raw_file => 'DR005631_F00004.decoded',
 		vt1 => 60,
 		vt2 => 112,
 		tA  => 0.000330440350808203,
@@ -321,6 +347,7 @@ my %constants = (
 	'DR005289_F00002.decoded' => {
 	# Run number	10024
 		invert_vertical => 1,
+		raw_file => 'DR005631_F00005.decoded',
 		vt1 => 60,
 		vt2 => 112,
 		tA  => 0.000330440350808203,
@@ -339,6 +366,7 @@ my %constants = (
 	'DR005289_F00003.decoded' => {
 	# Run number	10025
 		invert_vertical => 1,
+		raw_file => 'DR005631_F00006.decoded',
 		vt1 => 60,
 		vt2 => 112,
 		tA  => 0.000330440350808203,
@@ -358,13 +386,14 @@ my %constants = (
 
 # parse command line options
 my $sep = "\t";
-my ($debug, $print_all_points, $help);
+my ($debug, $print_all_points, $compare, $help);
 my $threshold = 0.5;
 GetOptions(
 	'debug|d!'      => \$debug,
 	'sep|s=s'       => \$sep,
 	'all_points|a!' => \$print_all_points,
 	'threshold|t=f' => \$threshold,
+	'compare|c!'    => \$compare,
 	'help|h!'       => \$help,
 ) or die pod2usage(-exitval => 1, -verbose => 1);
 die pod2usage(-exitval => 1, -verbose => 2) if $help;
@@ -386,6 +415,19 @@ for (<$F>) {
 }
 
 close $F;
+
+my @reduced_data;
+if ($compare) {
+	my $rfn = $constants{$fn}{raw_file};
+	open my $F, '<', $rfn or die "Can't open reduced data file $rfn";
+	for (<$F>) {
+		next if /^#/;
+		my ($s, $x, $y) = split;
+		next unless defined $x and defined $y;
+		$reduced_data[$s][$x] = $y;
+	}
+	close $F;
+}
 
 if ($print_all_points) {
 	for my $s (0..$#scans) {
@@ -413,11 +455,10 @@ if ($print_all_points) {
 				$maxv = -1;
 				$maxm = $m;
 			}
-			if ($debug) {
-				say join $sep, $s, $m, $maxv, $maxm;
-			} else {
-				say join $sep, $s, $m, $maxv;
-			}
+			my @out = ($s, $m, $maxv);
+			push @out, $reduced_data[$s][$m] // -1 if $compare;
+			push @out, $maxm if $debug;
+			say join $sep, @out;
 		}
 		
 		say "";
