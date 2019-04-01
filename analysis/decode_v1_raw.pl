@@ -190,7 +190,17 @@ while ($read = sysread $F, $s, 2) {
 		@decoded_int9 = map unpack_v1_triplet(\$s, 72 + $_*4), 0..($len-72)/4-1;
 	}
 
-	if ($len == 416 and not defined $first_real_scan_offset) {
+	# Kludge to determine the offset between the real scan number
+	# (that starts around 283) and the MIT scan number which starts at 1:
+	# Normally the first complete, real scan corresponds to MIT scan 1,
+	# except in run 10008 (V-1 cruise oven characterization, DR005289_F00004),
+	# where the raw file has scans 282 and 283, while the reduced file
+	# begins with 284, as MIT scan 2. The run id is not present in the raw
+	# files, so we have to rely on the fact that this misbehaving run is
+	# also the only one with length 50 packets.
+	if ($len == 80) {
+		$first_real_scan_offset = 282;
+	} elsif ($len == 416 and not defined $first_real_scan_offset) {
 		$first_real_scan_offset = $scan_count - 1;
 	}
 

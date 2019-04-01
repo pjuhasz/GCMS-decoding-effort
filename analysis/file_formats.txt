@@ -747,5 +747,11 @@ There is a third set of constants, labelled "mass compensation", but it
 is not known how or where to use them.
 
 The conversion algorithm described above produces a systematic relative
-error of about -5e-5, the reason of which is unknown. For file
-DR005289_F00004 the match is quite bad.
+error of about -5e-6, that is, the calculated value is slightly but
+consistently less than the value on record in the reduced file). It is
+possible (but not certain) that this error comes from the different
+floating point representations: while the modern conversion script uses
+IEEE-754 double precision numbers, the original, not exant, program that
+produced the reduced dataset presumably used the IBM 1800's format
+described earlier, which has even less precision than IEEE-754 single
+precision floats.
