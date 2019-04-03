@@ -407,11 +407,20 @@ die "No constants defined for $fn" unless defined $constants{$fn};
 
 open my $F, '<', $fn or die "Can't open $fn";
 
+# precompute scaled x and y table
+my (@h, @v);
+for (1..3840) {
+	$h[$_] = h($_, $fn);
+}
+for (0..511) {
+	$v[$_] = v($_, $fn);
+}
+
 for (<$F>) {
 	next if /^#/;
 	my ($s, $x, $y) = split;
 	next unless defined $x and defined $y;
-	push @{$scans[$s]}, [h($x, $fn), v($y, $fn)];
+	push @{$scans[$s]}, [$h[$x], $v[$y]];
 }
 
 close $F;
