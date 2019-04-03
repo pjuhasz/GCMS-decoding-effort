@@ -148,7 +148,7 @@ while (my $record = <$F>) {
 			say '# '.join $sep, $_->[1], get_i16(\$record, $_->[0]);
 		}
 		for my $mz (0..3839) {
-			say join $sep, $real_scan_id, $mz, $scan[$mz];
+			say join $sep, $real_scan_id, $mz+1, $scan[$mz];
 		}
 		say "";
 	}
