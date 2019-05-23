@@ -14,11 +14,11 @@ if (!exists("logs")) {
 	logs = 0
 }
 if (logs) {
-	set yr [*:*]
 	set logs y
+	set yr [*:*]
 } else {
-	set yr [0:*]
 	unset logs y
+	set yr [0:*]
 }
 
 set title sprintf("Mass spectrogram from %s (%d), m/z %d ", fn, runid, mz)
