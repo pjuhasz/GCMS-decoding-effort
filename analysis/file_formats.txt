@@ -447,7 +447,7 @@ Offset    | Type  | Meaning, notes
 04        | i16   | ?       - something related to packet size, type, contents, or modulo 16 counter?
 06        | i32   | millisecond-of-day counter, resets at 86400000
 0a        | i16   | ?       - always 0x1b00
-0c        | i16   | day counter?
+0c        | bcd16 | day counter, day of year 1976 as packed BCD
 0e        | i8    | ?       - either 0x0b or 0x73 (file 4)
 0f        | i8    | modulo 16 counter, 2 for frame 0, 1 otherwise
 11-13     | ???   | ?       - 4 bytes, always 0x02040076
@@ -481,13 +481,73 @@ information related to the transmission of data from Mars to Earth, and
 not anything directly useful for decoding and interpreting GCMS science
 data. Yet, it is not directly a dump of raw spacecraft telemetry,
 because the format described above does not match the known Viking
-lander telemetry formats (e.g. it doesn't seem to have the GCGS
+lander telemetry formats (e.g. it doesn't seem to have the GSCS
 timestamp, but it has several fields that must have been calculated
 and added during ground processing, e.g. the 24 hour msec counter).
 
 In the two files where some of the 32 byte long packets contain non-zero
 data, those data can be linked to the non-zero values of at header
 offset 0x32 and 0x3e.
+
+Timestamps in the frame header
+------------------------------
+
+In two of the files there is a certain point where the 32 bit field at
+offset 0x6 resets from (a value close to) 86400000 to (a value close to)
+0, and in the same frame the field at offset 0xc is incremented. From
+this it is obvious that the first of these fields is a millisecond-of-day
+counter and the second is a day counter. The difference between the
+millisecond counters of two frames 16 apart (i.e. a full scan) is quite
+consistently 10238 +/- 1 ms, in all 6 files.
+
+The values of the day counter don't make any sense when interpreted as
+simple 16 bit numbers, but when read as packed BCD (in other words, taking
+digits of the hexadecimal representation as decimal digits), they come
+remarkably close to the dates of the sample runs as known from the
+literature (when converted into day of the year 1976). The use of BCD is
+surprising, as it doesn't appear anywhere else in the files.
+
+The following table summarizes the known facts and assumptions about these
+timestamps.
+
+       |               |                 | scan date from literature | day field |   |   | ms counter          | tentative date                      | 
+run id | sample        | Raw file name   | sol | DOY 1976            | dec | hex | M | A | start    | end      | start            | end              |
+------ | ------------- | --------------- | --- | ------------------- | --- | --- | - | - | -------- | -------- | ---------------- | ---------------- | 
+10008  | Course blank  | DR005289_F00004 | -   | -                   |  51 |  33 |   |   | 35201600 | 39419300 |  33.407425925926 |  33.456241898148 |
+10015  | VL-1 Sample 1 | DR005289_F00005 | 17  | 219.286727890556    | 537 | 219 | 1 |   | 84433600 |  1314540 | 219.977240740741 | 220.015214583333 |
+10018  | VL-1 Sample 1 | DR005289_F00006 | 23  | 225.451675807222    | 551 | 227 |   | 1 | 19778300 | 23347900 | 227.228915509259 | 227.270230324074 |
+10023  | VL-1 Sample 2 | DR005289_F00001 | 32  | 234.699097682222    | 565 | 235 |   |   | 72883800 | 78259100 | 235.8435625      | 235.90577662037  |
+10024  | VL-1 Sample 2 | DR005289_F00002 | 37  | 239.836554279444    | 576 | 240 |   |   | 72879000 | 78254100 | 240.843506944444 | 240.90571875     |
+10025  | VL-1 Sample 2 | DR005289_F00003 | 43  | 246.001502196111    | 582 | 246 | 1 |   | 82859500 |   709952 | 246.959021990741 | 247.008217037037 |
+
+Scan dates in Martian sols since landing come from Biemann et al. (1977).
+Scan dates as day of year 1976 were calculated using the landing epoch
+of 201.81937546 (which corresponds to midnight of the landing sol,
+AKA sol 0.0 local time).
+Column M refers to midnight transition, 1 if it happens in the file.
+Column A is 1 if there is an anomaly with the timestamps in the file.
+The ms counter start and end columns denote the value of the millisecond
+counter at the first and last data frame, respectively.
+The tentative date column is formed by the sum of the day field and the
+start and end millisecond counter value, divided by 86400000, and adding
+one to the end if there was a midnight transition.
+
+The day and the millisecond fields together constitute an absolute
+timestamp, and it is tempting to assume that they encode the time of the
+actual measurement, which would be very useful.
+
+However, given that the values of the day field and the scan
+dates calculated from literature don't match exactly, and in case of run
+10018 the day value jumps back and forth between 227 and 228 several times
+(with the millisecond counter abruptly changing in the same frame), and
+that the timestamps are in Earth days and not Martian sols, it is more
+likely that they actually encode the Earth received time, that is, the
+time when the data was transmitted to the ground. The major anomaly in
+one file (and similar, smaller one-frame glitches in other files)
+probably mean that it took several transmission attempts to get the entire
+dataset to Earth. This, too, implies that the extant version of the data
+files are not raw dumps of the telemetry, but that they are processed,
+cleaned and re-assembled to a certain extent.
 
 Auxiliary data frames
 ---------------------
