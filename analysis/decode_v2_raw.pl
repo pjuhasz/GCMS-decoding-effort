@@ -134,6 +134,10 @@ if ($print_rowheaders) {
 }
 
 while (my $record = <$F>) {
+	# sanity check
+	my $len = unpack "v", $record; # packet length is _little endian_
+	die "Invalid frame length $len, file is possibly damaged or doesn't have the right format\n" if $len != $stride - 2;
+
 	my $real_scan_id = get_i16(\$record, 0x6c);
 	my @scan = reverse unpack "n*", substr $record, $hsize, $stride - $hsize;
 	if ($print_hex) {

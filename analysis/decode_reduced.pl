@@ -145,7 +145,8 @@ die pod2usage(-exitval => 1, -verbose => 0) unless $ARGV[0];
 open my $F, '<', $ARGV[0] or die "Can't open $ARGV[0]\n";
 
 # read file in fixed length chunks
-local $/ = \1282;
+my $stride = 1282;
+local $/ = \$stride;
 
 # magic translation table from EBCDIC to ASCII (from perlebcdic)
 # I've never imagined that I'll actually encounter EBCDIC in my life...
@@ -169,6 +170,11 @@ my $cp_037 =
 
 # read the header and print some of the known fields from it
 my $header = <$F>;
+
+# sanity check
+my $len = unpack "v", $header; # packet length is _little endian_
+die "Invalid frame length $len, file is possibly damaged or doesn't have the right format\n" if $len != $stride - 2;
+
 if (not $print_tabular) {
 	# decode the reversed EBCDIC information text
 	my $string = reverse substr $header, 0x4b2, 80;

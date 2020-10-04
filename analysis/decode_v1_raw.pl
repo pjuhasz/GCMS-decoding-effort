@@ -176,6 +176,10 @@ while ($read = sysread $F, $s, 2) {
 	die "Error reading file $ARGV[0]" unless defined $read;
 	last if $read == 0;
 	my $len = unpack "v", $s; # packet length is _little endian_
+
+	# sanity check
+	die "Invalid frame length $len, file is possibly damaged or doesn't have the right format\n" if $len > 416;
+
 	$read = sysread $F, $s, $len;
 	die "Error reading file $ARGV[0]" unless defined $read;
 	last if $read == 0;
