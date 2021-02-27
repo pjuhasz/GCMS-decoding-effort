@@ -269,7 +269,7 @@ sub get_float {
 # The IBM 1800 format uses 24 bits of mantissa in two's complement form
 # plus 8 bits of exponent (biased by 128 or 129, depending on
 # interpretation), in that order. There is no hidden bit normalization.
-# Example: 04000081 is decoded to 1.0.
+# Example: 40000081 is decoded to 1.0.
 sub unpack_IBM1800_float {
 	my ($v) = @_;
 
