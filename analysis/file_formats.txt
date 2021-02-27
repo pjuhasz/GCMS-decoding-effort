@@ -441,53 +441,117 @@ _beginning of the packet_, including the length prefix field.
 
 Offset    | Type  | Meaning, notes
 --------- | ----  | --------------
-00        | i16le | length  - either 0x6400 (short frames) or 0xa001 (long frames)
-02        | i8    | ?       - modulo 18 counter (avg period ~18.3)
-03        | i8    | blank
-04        | i16   | ?       - something related to packet size, type, contents, or modulo 16 counter?
-06        | i32   | millisecond-of-day counter, resets at 86400000
-0a        | i16   | ?       - always 0x1b00
-0c        | bcd16 | day counter, day of year 1976 as packed BCD
-0e        | i8    | ?       - either 0x0b or 0x73 (file 4)
-0f        | i8    | modulo 16 counter, 2 for frame 0, 1 otherwise
-11-13     | ???   | ?       - 4 bytes, always 0x02040076
-14        | i16   | ?       - fluctuating around a file-dependent constant
-16        | i16   | ?       - either 0x0e00 or 0x2b00
-18        | i16   | ?       - either 0x0a29 or 0x1d72
-1a        | i16   | ?       - almost always 0x6800 (except for a few spikes to 0x6804)
-1c        | i16   | ?       - almost, but not quite the value at offset 2, times 8
-1e-21     | ???   | ?       - 4 bytes, always 0x1a000fa0
-22        | i8    | blank
-23        | i8    | ?       - almost always 0x12 or 0x11 (except for a few +1 spikes)
-24        | i8    | ?       - file-dependent value with lot of random-looking noise
-25-29     | i8    | blank
-2a        | i16   | frame counter (continuous, but with varying starting offset, few skips mid-file and jumps backwards near first scan)
-2c        | i16   | ?       - almost always 0xc3 or 0xc2 (with one -1 spike)
-2e        | i8    | ?       - always 0x41
-2f        | i16   | scan counter (i16 but not aligned to 2 byte boundary!)
-31        | i8    | frame counter (intra-scan, range 0-15)
-32-35     | ???   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
-36        | i16   | blank
-38        | i8    | reset counter (increases every time there is a missed frame, but with starting offset and spikes)
-39-3a     | i8    | blank
-3b        | i16   | frame counter (continuous, i16 but not aligned to 2 byte boundary!)
-3d        | i8    | ?       - file-dependent constant
-3e-41     | ???   | ?       - 4 bytes, blank for data frames (but non-zero in the empty frames before scans)
-42-45     | i8    | blank
+00        | i16le | length              - either 0x6400 (short frames) or 0xa001 (long frames)
+02        | i8    | LOGICAL RECORD FLAG - 0, 1 or 2, cycles with avg period ~18.3
+03        | i24   | LENGTH OF LOG. REC. - but in what units?
+06        | i32   | TTAG                - millisecond-of-day counter, resets at 86400000
+0a        | i8    | SPC                 - always 0x1b 
+0b        | i8    | TCF                 - always 0
+0c        | bcd16 | DAYEAR              - day of year 1976 as packed BCD
+0e        | i8    | SPARE               - either 0x0b or 0x73 (file 4)
+0f        | i8    | CAT. FLAG           - modulo 16 counter, 2 for frame 0, 1 otherwise
+10        | i8    | SCC                 - always 0x02
+11        | i8    | DQUAL               - always 0x04
+12        | i8    | BERR                - always 0 (bit error rate?)
+13        | bcd8  | YEAR                - always 0x76  (1976, obviously)
+14        | i16   | SNR                 - fluctuating around a file-dependent constant
+16        | i8    | DSS                 - either 14 or 43, the DSN antenna used to receive data
+17        | i8    | LOCK                - always 0
+18        | i16   | CONFIG              - either 0x0a29 or 0x1d72
+1a        | i8    | SPECIAL DATA TYPE   - always 0x68
+1b        | i8    | GDD                 - always 0 (except for a few spikes to 4)
+1c        | i16   | NDBR                - almost, but not quite the value at offset 3, times 8
+1e        | i8    | AGCSMP              - always 0x1a
+1f        | i8    | HSDERR              - always 0
+20        | i16   | DATRAT              - always 4000 (data rate?)
+22        | i32   | AVAGC               - value around 0x0012xx00, with lot of random-looking noise in the 3rd byte
+26        | i16   | SPARE               - always 0
+28        | i16   | SDRREC              - always 0
+2a        | i16   | SEQ                 - frame counter (continuous, but with varying starting offset, few skips mid-file and jumps backwards near first scan)
+2c        | i16   | VMCIND              - almost always 0xc3 or 0xc2 (with one -1 spike)
+2e        | i8    | VL&FMTID            - always 0x41 (lander 1, format 4?)
+2f        | i16   | GCMS scan counter   - (i16 but not aligned to 2 byte boundary!)
+31        | i8    | GCMS frame counter  - (intra-scan, range 0-15)
+32        | i32   | GSCS Coll. time     - "GCSC collection time from FMT 4 that FOLLOWS", blank for data frames (but non-zero in the empty frames before scans)
+36        | i24   | ACTND               - reset counter (increases every time there is a missed frame, but with starting offset and spikes) (first 2 bytes always 0)
+39        | i8    | VOSNR               - always 0
+3a        | i24   | DATFRM              - frame counter (continuous, i16 but not aligned to 2 byte boundary!)
+3d        | i8    | PRIOR               - file-dependent constant
+3e        | i32   | GSCS Coll. time     - "GCSC collection time from FMT 4 that PRECEDED", blank for data frames (but non-zero in the empty frames before scans)
+42        | i16   | SDRREC              - always 0
+44        | i8    | IQUAL               - always 0
+45        | i8    | SPARE               - always 0
 46        | i32   | ?       - always 0x04b3e375 (signature for end of header?)
 
-It is likely that the frame headers contain only housekeeping
+
+Here is the same information, in a more visual representation (the length
+prefix is omitted to match the corresponding diagrams in the legacy
+documentation):
+
+offset                          bits                                 word
+-------------------------------------------------------------------------
+     |0                   1                   2                   3  |
+     |0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1|
+     +---------------+---------------+---------------+---------------+
+0000 |logical rec.flg|       length of logical record                | 1
+     +---------------+---------------+---------------+---------------+
+0004 |                    TTAG (msec of day)                         | 2
+     +---------------+---------------+---------------+---------------+
+0008 |  SPC (0x1b)   |   TCF (0)     |     DAYEAR (DOY 1976 as BCD)  | 3
+     +---------------+---------------+---------------+---------------+
+000c |SPARE 0x0b/0x73| CAT. FLAG     |    SCC (0x02) |  DQUAL(0x04)  | 4
+     +---------------+---------------+---------------+---------------+
+0010 |   BERR (0)    |YEAR (0x76 BCD)| SNR(file-dependent ~constant) | 5
+     +---------------+---------------+---------------+---------------+
+0014 | DSS(14 or 43) |   LOCK (0)    |    CONFIG (0x0a29/0x1d72)     | 6
+     +---------------+---------------+---------------+---------------+
+0018 |SPEC DATA TYPE | GDD (0 or 4)  |              NDBR             | 7
+     +---------------+---------------+---------------+---------------+
+001c | AGCSMP (0x1a) |  HSDERR (0)   |       DATRAT (4000)           | 8
+     +---------------+---------------+---------------+---------------+
+0020 |     AVAGC (something around 0x0012xx00, first/last byte 0)    | 9
+     +---------------+---------------+---------------+---------------+
+0024 |       SPARE (0)               |        SDRREC (0)             | 10
+     +---------------+---------------+---------------+---------------+
+0028 | SEQ (continuous frame counter)|   VMCIND (~ 0xc3 or 0xc2)     | 11
+     +---------------+---------------+---------------+---------------+
+002c | VL&FMTID(0x41)|        scan counter           | frame cnt 0-15| 12
+     +---------------+---------------+---------------+---------------+
+0030 |GCSC COLL. TIME FOLLOWS (0 in data frames, !0 in empty frames) | 13                                                           |
+     +---------------+---------------+---------------+---------------+
+0034 |        ACTND (reset cnt, first two bytes 0)   |  VOSNR (0)    | 14
+     +---------------+---------------+---------------+---------------+
+0038 |       DATFRM (continuous frame counter)       |PRIOR(file-dep)| 15
+     +---------------+---------------+---------------+---------------+
+003c |GCSC COLL. TIME PRECEDED (0 in data frames, !0 in empty frames)| 16                                                           |
+     +---------------+---------------+---------------+---------------+
+0040 |          SDRREC (0)           |  IQUAL (0)    |  SPARE (0)    | 17
+     +---------------+---------------+---------------+---------------+
+0044 |                      ? (0x04b3e375)                           | 18
+     +---------------+---------------+---------------+---------------+
+
+The all-capitals field designations come from the telemetry/data format
+description document SD-37D000, an abridged version of which is available at:
+
+http://www-udc.ig.utexas.edu/external/yosio/Viking/FormatDescriptions/FromSD-37D000&PD7400072.pdf
+
+Unfortunately, the meaning of most of these abbreviations is not available,
+so we are left to guess.
+
+In any case is likely that the frame headers contain only housekeeping
 information related to the transmission of data from Mars to Earth, and
 not anything directly useful for decoding and interpreting GCMS science
 data. Yet, it is not directly a dump of raw spacecraft telemetry,
-because the format described above does not match the known Viking
-lander telemetry formats (e.g. it doesn't seem to have the GSCS
-timestamp, but it has several fields that must have been calculated
-and added during ground processing, e.g. the 24 hour msec counter).
+because the frames were rearranged (the empty frames at the beginning of
+the files were transmitted last according to the timestamps), and in some
+cases gaps in the data were filled in from later retransmissions. The DATFRM
+field likely represents the order in which the frames were received, while
+the SEQ field represents their logical order. The files' contents were
+rearranged in the latter order.
 
 In the two files where some of the 32 byte long packets contain non-zero
 data, those data can be linked to the non-zero values of at header
-offset 0x32 and 0x3e.
+offset 0x32 and 0x3e (the GSCS timestamps).
 
 Timestamps in the frame header
 ------------------------------
@@ -548,6 +612,14 @@ probably mean that it took several transmission attempts to get the entire
 dataset to Earth. This, too, implies that the extant version of the data
 files are not raw dumps of the telemetry, but that they are processed,
 cleaned and re-assembled to a certain extent.
+
+There are also the fields described as "GCSC collection time from FMT 4 that
+FOLLOWS" and "PRECEDED". The GSCS was the main sequencing computer, and
+it kept a global 24 bit timestamp that was increased every 160 milliseconds.
+So this sounds like a something that could provide absolute timing information
+for the measurements - unfortunately, these fields are zero for the
+data-bearing frames, and constant (within a file) for the empty frames at
+the beginning and end of files. So they are unlikely to be useful.
 
 Auxiliary data frames
 ---------------------

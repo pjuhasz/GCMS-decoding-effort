@@ -21,6 +21,9 @@ headers:
 	for f in $(V1RAWPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; perl decode_v1_raw.pl -r "$$f" > "$$h.header"; done
 	for f in $(V2RAWPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; perl decode_v2_raw.pl -r "$$f" > "$$h.header"; done
 
+frames:
+	for f in $(V1RAWPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; perl decode_v1_raw.pl -f -H "$$f" > "$$h.frames"; done
+
 convert: decode
 	for f in $(V1RAWPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; r="$$h.decoded"; perl convert_raw.pl -c "$$r" > "$$h.converted"; done
 	for f in $(V2RAWPATH)/*; do g=`basename "$$f"`; h="$${g/.PHYS/}"; r="$$h.decoded"; perl convert_raw.pl -c "$$r" > "$$h.converted"; done
